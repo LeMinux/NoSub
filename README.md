@@ -11,3 +11,6 @@ A python program that loads the most recent video from a youtube channel without
   -> https://docs.python.org/3/library/webbrowser.html#webbrowser.get
   
   -> https://stackoverflow.com/questions/47118598/python-how-to-open-default-browser-using-webbrowser-module
+  
+  ## Side note
+    This uses Beautiful Soup, so this is susceptible to breakage if Youtube changes the HTML structure
