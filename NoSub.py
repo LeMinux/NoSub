@@ -6,18 +6,11 @@ import sys
 import webbrowser
 from bs4 import BeautifulSoup
 
-BROWSER = "/usr/bin/librewolf %s"
+BROWSER = "<Insert browser>"
 YOUTUBE_BASE = "https://www.youtube.com/watch?v="
 ID_PATTERN = r'"videoId":"(.*?)"'
 DATA_PATTERN = r'"accessibilityData":{"label":"[^"]*"}}},"descriptionSnippet":'
 TIME_PATTERN = r"(\d+ (?:year|month|week|day|hour|minute|second)[s]?)(?= ago)"
-
-if len(sys.argv) != 2:
-    print("Did not provide a file of youtuber home pages")
-    raise SystemExit
-
-urlList = sys.argv[1]
-assert os.path.exists(urlList)
 
 client = webbrowser.get(BROWSER)
 
@@ -28,7 +21,8 @@ def loadVideo(idString):
     except webbrowser.Error as e:
         print(e)
 
-with open(urlList, "r") as urlFile:
+def parseSubs(urlList):
+    urlFile = open(urlList, "r")
     for url in urlFile:
         if url.find("/videos") == -1:
             url = url.replace("\n", "/videos")
@@ -74,8 +68,6 @@ with open(urlList, "r") as urlFile:
         for description in videoInfo:
             timePublished.append(re.search(TIME_PATTERN, description).group(0))
 
-        #print(timePublished)
-
         #determine if video is older than a day
         foundIndex = 0
         index = 0
@@ -83,13 +75,16 @@ with open(urlList, "r") as urlFile:
         for pubTime in timePublished:
             foundIndex = re.search(r"day|days", pubTime)
             if foundIndex:
-                dayTime = pubTime[foundIndex.start() - 2:foundIndex.start()]
-                if "1" in dayTime:
+                dayTime = pubTime[:foundIndex.start() - 1]
+                if dayTime == "1":
                     loadVideo(videoIds[index])
                     loadedVideo = True
                 else:
                     break
             elif re.search(r"hour|hours", pubTime):
+                loadVideo(videoIds[index])
+                loadedVideo = True
+            elif re.search(r"minute|minutes", pubTime):
                 loadVideo(videoIds[index])
                 loadedVideo = True
             elif re.search(r"second|seconds", pubTime):
@@ -106,4 +101,17 @@ with open(urlList, "r") as urlFile:
 
         #print statement to separate output
         print()
+    urlFile.close()
+
+def main():
+    if len(sys.argv) != 2:
+        print("Did not provide a file of youtuber home pages")
+        raise SystemExit
+
+    urlList = sys.argv[1]
+    assert os.path.exists(urlList)
+    parseSubs(urlList);
+
+
+main()
 
