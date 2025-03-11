@@ -2,7 +2,7 @@
   NoSub
 
 # SYNOPSIS
-  python3 NoSub.py [OPTION...] [FILE...]
+  python3 nosub.py [OPTION...] [FILE...]
   
 # DESCRIPTION
   Python program that I made so that I don't have to login to Youtube to look at notifications for recent uploads. No need to explicity make an account to explicitly subscribe.
@@ -51,7 +51,7 @@
   This option also changes the behavior of when a handle has not been known yet. The default behavior is to load only the first video,
   but when specifying this option it'll try to load more videos that fall within the time frame as the program has been given a stopping point.
   
-  It takes two arguments the first is any number and the second is a specified unit of time.
+  It takes two arguments, the first is any positive number greater than zero and the second is a specified unit of time.
   
   Valid units:
     
