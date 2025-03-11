@@ -1882,7 +1882,6 @@ class BothExecutionTesting(unittest.TestCase):
         self.patcher_db_conn.stop()
         self.patcher_mock_browser.stop()
 
-
     def mockObtainHtmls(self, *args, **kwargs):
         response = Response()
         if args[0] == "https://www.youtube.com/@an0nymooose/videos":
@@ -1942,7 +1941,6 @@ class BothExecutionTesting(unittest.TestCase):
         cursor.execute("DELETE FROM KnownVideos")
         self.testing_connection.commit()
 
-    #despite any execution the most recent video should be in the db
     def verifyPostDB(self):
         cursor = self.testing_connection.cursor()
         rtv_handle = "RomanianTvee"
@@ -2019,7 +2017,7 @@ class BothExecutionTesting(unittest.TestCase):
         self.clearDB()
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/both.txt", "-b", "-t", "2", "days"]
         nosub.main()
-        self.assertEqual(self.mock_browser.call_count, 8)
+        self.assertEqual(self.mock_browser.call_count, 9)
         call_list =\
         [
             call("https://www.youtube.com/watch?v=pqYu8-JjXNQ", autoraise = False), #rtv
@@ -2027,6 +2025,7 @@ class BothExecutionTesting(unittest.TestCase):
             call("https://www.youtube.com/watch?v=dyFCyOWq8PY", autoraise = False), #rtv
             call("https://www.youtube.com/watch?v=3W0yMU06_pY", autoraise = False), #rtv
             call("https://www.youtube.com/watch?v=wyf_za8nQDw", autoraise = False), #rtv
+            call("https://www.youtube.com/watch?v=QEJpZjg8GuA", autoraise = False), #tech connect
             call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA", autoraise = False), #neon
             call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc", autoraise = False), #tom
             call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0", autoraise = False), #buddha
