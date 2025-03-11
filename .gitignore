@@ -1,0 +1,9 @@
+*.db
+*.txt
+*.json
+*.html
+
+Makefile
+Youtubers/
+TestEnvironment/TestFiles
+__pycache__

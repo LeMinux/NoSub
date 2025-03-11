@@ -7,7 +7,7 @@ from requests.models import Response
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
-import NoSubNew
+import nosub
 
 from unittest.mock import patch
 from unittest.mock import call
@@ -23,223 +23,223 @@ class ValidationMethods(unittest.TestCase):
     #links can be a bit tricky as superficially they have all permissions,
     #so to get the actual permissions these do need to be resolved
     def testValidFile(self):
-       self.assertTrue(NoSubNew.checkFile("./cur_dir_test.txt"))
+       self.assertTrue(nosub.checkFile("./cur_dir_test.txt"))
 
     def testImplicitCurDirFile(self):
-        self.assertTrue(NoSubNew.checkFile("cur_dir_test.txt"))
+        self.assertTrue(nosub.checkFile("cur_dir_test.txt"))
 
     def testValidLink(self):
-        self.assertTrue(NoSubNew.checkFile("./TestFiles/link_to_good_file.txt"))
+        self.assertTrue(nosub.checkFile("./TestFiles/link_to_good_file.txt"))
 
     def testLinkChaining(self):
-        self.assertTrue(NoSubNew.checkFile("./TestFiles/link_to_link"))
+        self.assertTrue(nosub.checkFile("./TestFiles/link_to_link"))
 
     def testNotRealFile(self):
-        self.assertFalse(NoSubNew.checkFile("somerandomfilewow.random"))
+        self.assertFalse(nosub.checkFile("somerandomfilewow.random"))
 
     #sudoers has -r--r-----
     def testNoReadPerms(self):
-        self.assertFalse(NoSubNew.checkFile("/etc/sudoers"))
+        self.assertFalse(nosub.checkFile("/etc/sudoers"))
 
     def testLinkToNoReadPerms(self):
-        self.assertFalse(NoSubNew.checkFile("./TestFiles/link_to_root.txt"))
+        self.assertFalse(nosub.checkFile("./TestFiles/link_to_root"))
 
     def testBrokenLink(self):
-        self.assertFalse(NoSubNew.checkFile("./TestFiles/broken_link.txt"))
+        self.assertFalse(nosub.checkFile("./TestFiles/broken_link.txt"))
 
     def testDirectoryAsFile(self):
-        self.assertFalse(NoSubNew.checkFile("./TestFiles/"))
+        self.assertFalse(nosub.checkFile("./TestFiles/"))
 
     def testNoFileName(self):
-        self.assertFalse(NoSubNew.checkFile(self.empty))
+        self.assertFalse(nosub.checkFile(self.empty))
 
     def testFileAsSpaces(self):
-        self.assertFalse(NoSubNew.checkFile(self.spaces))
+        self.assertFalse(nosub.checkFile(self.spaces))
 
     def testFileAsMoreWhiteSpace(self):
-        self.assertFalse(NoSubNew.checkFile(self.white_space))
+        self.assertFalse(nosub.checkFile(self.white_space))
 
     #test convertToMinutes
     valid_number = "8"
     def test8ToSecond(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, "second"), 8/60)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, "second"), 8/60)
 
     def test8ToSeconds(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, "seconds"), 8/60)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, "seconds"), 8/60)
 
     def test8ToMinute(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, "minute"), 8)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, "minute"), 8)
 
     def test8ToMinutes(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, "minutes"), 8)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, "minutes"), 8)
 
     def test8ToHour(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, "hour"), 480)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, "hour"), 480)
 
     def test8ToHours(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, "hours"), 480)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, "hours"), 480)
 
     def test8ToDay(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, "day"), 11520)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, "day"), 11520)
 
     def test8ToDays(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, "days"), 11520)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, "days"), 11520)
 
     def test8ToWeek(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, "week"), 80640)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, "week"), 80640)
 
     def test8ToWeeks(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, "weeks"), 80640)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, "weeks"), 80640)
 
     def test8ToMonth(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, "month"), 350640)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, "month"), 350640)
 
     def test8ToMonths(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, "months"), 350640)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, "months"), 350640)
 
     def test8ToYear(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, "year"), 4207680)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, "year"), 4207680)
 
     def test8ToYears(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, "years"), 4207680)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, "years"), 4207680)
 
     def testBigNumberToYears(self):
         valid_big_number = "5000"
-        self.assertEqual(NoSubNew.convertToMinutes(valid_big_number, "years"), 2629800000)
+        self.assertEqual(nosub.convertToMinutes(valid_big_number, "years"), 2629800000)
 
     def testWeridWayOfSayingOne(self):
         valid_weird_one = "00000001"
-        self.assertEqual(NoSubNew.convertToMinutes(valid_weird_one, "minutes"), 1)
+        self.assertEqual(nosub.convertToMinutes(valid_weird_one, "minutes"), 1)
 
     def testPassingInZero(self):
         invalid_zero = "0"
-        self.assertEqual(NoSubNew.convertToMinutes(invalid_zero, "minutes"), -1)
+        self.assertEqual(nosub.convertToMinutes(invalid_zero, "minutes"), -1)
 
     def testPassingNegativeOne(self):
         invalid_negative = "-1"
-        self.assertEqual(NoSubNew.convertToMinutes(invalid_negative, "minutes"), -1)
+        self.assertEqual(nosub.convertToMinutes(invalid_negative, "minutes"), -1)
 
     def testPassingALargeNegativeToOverflow(self):
         invalid_big_negative = "-999999999999999999999"
-        self.assertEqual(NoSubNew.convertToMinutes(invalid_big_negative, "minutes"), -1)
+        self.assertEqual(nosub.convertToMinutes(invalid_big_negative, "minutes"), -1)
 
     def testPassingInANumberWithLetter(self):
         invalid_number = "27m"
-        self.assertEqual(NoSubNew.convertToMinutes(invalid_number, "minutes"), -1)
+        self.assertEqual(nosub.convertToMinutes(invalid_number, "minutes"), -1)
 
     def testPassingIncorrectUnit(self):
         invalid_unit = "yers"
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, invalid_unit), -1)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, invalid_unit), -1)
 
     def testSwappedParameters(self):
-        self.assertEqual(NoSubNew.convertToMinutes("hours", self.valid_number), -1)
+        self.assertEqual(nosub.convertToMinutes("hours", self.valid_number), -1)
 
     def testEmptyNumber(self):
-        self.assertEqual(NoSubNew.convertToMinutes("", "weeks"), -1)
+        self.assertEqual(nosub.convertToMinutes("", "weeks"), -1)
 
     def testEmptyUnit(self):
-        self.assertEqual(NoSubNew.convertToMinutes(self.valid_number, ""), -1)
+        self.assertEqual(nosub.convertToMinutes(self.valid_number, ""), -1)
 
     #validate handle strings
     def testValidateAValidHandle(self):
         valid_handle = "TestGuy3"
-        self.assertEqual(NoSubNew.validateHandle(valid_handle), True)
+        self.assertEqual(nosub.validateHandle(valid_handle), True)
 
     def testValidateAnInvalidHandle(self):
         invalid_handle = "IAmAReallyLongHandleThatCannotOccur"
-        self.assertEqual(NoSubNew.validateHandle(invalid_handle), False)
+        self.assertEqual(nosub.validateHandle(invalid_handle), False)
 
     def testPassingMaliciousHandle(self):
         invalid_handle = "0 OR 1=1;--"
-        self.assertEqual(NoSubNew.validateHandle(invalid_handle), False)
+        self.assertEqual(nosub.validateHandle(invalid_handle), False)
 
     def testPassingMaliciousHandle2(self):
         invalid_handle = "0 OR 1-true"
-        self.assertEqual(NoSubNew.validateHandle(invalid_handle), False)
+        self.assertEqual(nosub.validateHandle(invalid_handle), False)
 
     def testValidateAnEmptyHandle(self):
-        self.assertEqual(NoSubNew.validateHandle(self.empty), False)
+        self.assertEqual(nosub.validateHandle(self.empty), False)
 
     def testValidateHandleThatIsWhiteSpace(self):
-        self.assertEqual(NoSubNew.validateHandle(self.spaces), False)
+        self.assertEqual(nosub.validateHandle(self.spaces), False)
 
     def testValidateHandleThatIsMoreWhiteSpace(self):
-        self.assertEqual(NoSubNew.validateHandle(self.white_space), False)
+        self.assertEqual(nosub.validateHandle(self.white_space), False)
 
     #validate video id strings
     def testPassingValidVideoId(self):
         valid_id = "AB7pBrudFbg"
-        self.assertEqual(NoSubNew.validateVideoId(valid_id), True)
+        self.assertEqual(nosub.validateVideoId(valid_id), True)
 
     def testPassingVideoIdWithMultipleDashes(self):
         valid_id = "--FS3QW4QuE"
-        self.assertEqual(NoSubNew.validateVideoId(valid_id), True)
+        self.assertEqual(nosub.validateVideoId(valid_id), True)
 
     def testPassingVideoIdWithMultipleUnderscores(self):
         valid_id = "OoETj__HfVg"
-        self.assertEqual(NoSubNew.validateVideoId(valid_id), True)
+        self.assertEqual(nosub.validateVideoId(valid_id), True)
 
     def testPassingVideoIdThatIsTooShort(self):
         invalid_id = "AB7prudFbg"
-        self.assertEqual(NoSubNew.validateVideoId(invalid_id), False)
+        self.assertEqual(nosub.validateVideoId(invalid_id), False)
 
     def testPassingVideoIdThatIsTooLong(self):
         invalid_id = "AB7prudgeFbg"
-        self.assertEqual(NoSubNew.validateVideoId(invalid_id), False)
+        self.assertEqual(nosub.validateVideoId(invalid_id), False)
 
     def ValidateInvalidVideoId(self):
         invalid_id = "8^![l]|e783"
-        self.assertEqual(NoSubNew.validateVideoId(invalid_id), False)
+        self.assertEqual(nosub.validateVideoId(invalid_id), False)
 
     def testPassingEmtpyVideoId(self):
-        self.assertEqual(NoSubNew.validateVideoId(self.empty), False)
+        self.assertEqual(nosub.validateVideoId(self.empty), False)
 
     def testValidateVideoIdThatIsWhiteSpace(self):
-        self.assertEqual(NoSubNew.validateVideoId(self.spaces), False)
+        self.assertEqual(nosub.validateVideoId(self.spaces), False)
 
     def testValidateVideoIdThatIsMoreWhiteSpace(self):
-        self.assertEqual(NoSubNew.validateVideoId(self.white_space), False)
+        self.assertEqual(nosub.validateVideoId(self.white_space), False)
 
     #validate release id strings
     def testValidateValidReleaseId(self):
         valid_id = "OLAK5uy_mqUpJnm37KuCU0D5kF4SdvqTkK0WGIdWg"
-        self.assertEqual(NoSubNew.validateReleaseId(valid_id), True)
+        self.assertEqual(nosub.validateReleaseId(valid_id), True)
 
     def testValidateReleaseIdWithDash(self):
         valid_id = "OLAK5uy_kvdrBzs4x1W-bcTd0XhVdWTxks30L3GhI"
-        self.assertEqual(NoSubNew.validateReleaseId(valid_id), True)
+        self.assertEqual(nosub.validateReleaseId(valid_id), True)
 
     def testValidateReleaseIdWithManyUnderscores(self):
         valid_id = "OLAK5uy_l8val_6FdXgV0jPfDGWiXG5Dq-YELTp5E"
-        self.assertEqual(NoSubNew.validateReleaseId(valid_id), True)
+        self.assertEqual(nosub.validateReleaseId(valid_id), True)
 
     def testValidateValidReleaseIdThatIsTooShort(self):
         invalid_id = "mqUpJnm37KuCU0D5kF4SdvqTkK0WGIdWg"
-        self.assertEqual(NoSubNew.validateReleaseId(invalid_id), False)
+        self.assertEqual(nosub.validateReleaseId(invalid_id), False)
 
     def testValidateValidReleaseIdThatIsTooLong(self):
         invalid_id = "OLAK5uy_mqUpJnm37KuCU0D5kF4SdvqTkK0WGIdWgdawg"
-        self.assertEqual(NoSubNew.validateReleaseId(invalid_id), False)
+        self.assertEqual(nosub.validateReleaseId(invalid_id), False)
 
     def testValidateValidReleaseIdWithInvalidCharacters(self):
         invalid_id = "OLAK5uy_m!U'Jnm37KuCU0D;kF4SdvqT K0WGIdWw"
-        self.assertEqual(NoSubNew.validateReleaseId(invalid_id), False)
+        self.assertEqual(nosub.validateReleaseId(invalid_id), False)
 
     def testValidateEmptyReleaseId(self):
-        self.assertEqual(NoSubNew.validateReleaseId(self.empty), False)
+        self.assertEqual(nosub.validateReleaseId(self.empty), False)
 
     def testValidateReleaseIdThatIsWhiteSpace(self):
-        self.assertEqual(NoSubNew.validateReleaseId(self.spaces), False)
+        self.assertEqual(nosub.validateReleaseId(self.spaces), False)
 
     def testValidateReleaseIdThatIsMoreWhiteSpace(self):
-        self.assertEqual(NoSubNew.validateReleaseId(self.white_space), False)
+        self.assertEqual(nosub.validateReleaseId(self.white_space), False)
 
 
 class TestExecutionFlags(unittest.TestCase):
     def setUp(self):
-        self.patcher_norm_exec = patch("NoSubNew.normalExec")
-        self.patcher_real_exec = patch("NoSubNew.releaseExec")
-        self.patcher_init = patch("NoSubNew.init")
+        self.patcher_norm_exec = patch("nosub.normalExec")
+        self.patcher_real_exec = patch("nosub.releaseExec")
+        self.patcher_init = patch("nosub.init")
 
         self.mock_norm = self.patcher_norm_exec.start()
         self.mock_real = self.patcher_real_exec.start()
@@ -254,38 +254,38 @@ class TestExecutionFlags(unittest.TestCase):
         self.patcher_real_exec.stop()
 
     def testPassing8ToDashN(self):
-        sys.argv = ["NoSubNew.py", "-f", "./cur_dir_test.txt", "-n", "8"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./cur_dir_test.txt", "-n", "8"]
+        nosub.main()
         self.mock_norm.assert_called_once()
         self.mock_real.assert_not_called()
 
     def testPassing8ToLongFormNumber(self):
-        sys.argv = ["NoSubNew.py", "-f", "./cur_dir_test.txt", "--number", "8"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./cur_dir_test.txt", "--number", "8"]
+        nosub.main()
         self.mock_norm.assert_called_once()
         self.mock_real.assert_not_called()
 
 
     def testPassing1ToDashN(self):
-        sys.argv = ["NoSubNew.py", "-f", "cur_dir_test.txt", "-n", "1"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "cur_dir_test.txt", "-n", "1"]
+        nosub.main()
         self.mock_norm.assert_called_once()
         self.mock_real.assert_not_called()
 
     def testPassing0ToDashN(self):
-        sys.argv = ["NoSubNew.py", "-f", "cur_dir_test.txt", "-n", "0"]
+        sys.argv = ["nosub.py", "-f", "cur_dir_test.txt", "-n", "0"]
         with self.assertRaises(SystemExit):
-            NoSubNew.main()
+            nosub.main()
 
     def testPassingNegative1ToDashN(self):
-        sys.argv = ["NoSubNew.py", "-f", "cur_dir_test.txt", "-n", "-1"]
+        sys.argv = ["nosub.py", "-f", "cur_dir_test.txt", "-n", "-1"]
         with self.assertRaises(SystemExit):
-            NoSubNew.main()
+            nosub.main()
 
     def testPassingLargeNegativeToDashN(self):
-        sys.argv = ["NoSubNew.py", "-f", "cur_dir_test.txt", "-n", "-999999999999999999999"]
+        sys.argv = ["nosub.py", "-f", "cur_dir_test.txt", "-n", "-999999999999999999999"]
         with self.assertRaises(SystemExit):
-            NoSubNew.main()
+            nosub.main()
 
 class TestJsonExtraction(unittest.TestCase):
     videos = "videos"
@@ -306,43 +306,43 @@ class TestJsonExtraction(unittest.TestCase):
     def testPassingVideoAndValidHandle(self):
         valid_handle = "GTARadioSoundtracks"
         with self.assertRaises(Exception):
-            NoSubNew.obtainElements(self.videos, valid_handle)
+            nosub.obtainElements(self.videos, valid_handle)
 
     def testPassingReleasesAndValidHandle(self):
         valid_handle = "GTARadioSoundtracks"
         with self.assertRaises(Exception):
-            NoSubNew.obtainElements(self.releases, valid_handle)
+            nosub.obtainElements(self.releases, valid_handle)
 
     def testPassingCompleteURLAsHandle(self):
         invalid_handle = "https://www.youtube.com/watch?v=Fjp0wu3lEHk&list=PLLvWV__Bn2_PwR92FfrxjsZCAM7zyxzze&index=2"
-        self.assertEqual(NoSubNew.obtainElements(self.releases, invalid_handle), None)
+        self.assertEqual(nosub.obtainElements(self.releases, invalid_handle), None)
 
     def testPassingCompleteYoutuberPage(self):
         invalid_handle = "https://www.youtube.com/@WillTennyson"
-        self.assertEqual(NoSubNew.obtainElements(self.releases, invalid_handle), None)
+        self.assertEqual(nosub.obtainElements(self.releases, invalid_handle), None)
 
     def testPassingHandleWithTabAtEnding(self):
         invalid_handle = "GrayStillPlays/video" #shouldn't give the /vidoe at the end
-        self.assertEqual(NoSubNew.obtainElements(self.videos, invalid_handle), None)
+        self.assertEqual(nosub.obtainElements(self.videos, invalid_handle), None)
 
     def testPassingThreeSlashes(self):
         invalid_handle = "///"
-        self.assertEqual(NoSubNew.obtainElements(self.videos, invalid_handle), None)
+        self.assertEqual(nosub.obtainElements(self.videos, invalid_handle), None)
 
     def testHandleWithNewLine(self):
         invalid_handle = "GTARadioSoundtracks\n"
-        self.assertEqual(NoSubNew.obtainElements(self.videos, invalid_handle), None)
+        self.assertEqual(nosub.obtainElements(self.videos, invalid_handle), None)
 
     def testPassingEmptyHandle(self):
-        self.assertEqual(NoSubNew.obtainElements(self.videos, self.empty), None)
+        self.assertEqual(nosub.obtainElements(self.videos, self.empty), None)
 
     def testPassingMaliciousURL(self):
         invalid_handle = "https://www.y0utvbe.com/@superhacker"
-        self.assertEqual(NoSubNew.obtainElements(self.videos, invalid_handle), None)
+        self.assertEqual(nosub.obtainElements(self.videos, invalid_handle), None)
 
     def testPassingInvalidHandle(self):
         invalid_handle = "thedoubtfultechn!cian"
-        self.assertEqual(NoSubNew.obtainElements(self.videos, invalid_handle), None)
+        self.assertEqual(nosub.obtainElements(self.videos, invalid_handle), None)
 
     #Tests actual extraction of data
     #The previous test about arguments exists since the arguments passed here
@@ -409,55 +409,55 @@ class JsonExtraction(unittest.TestCase):
     def testExtractingAPageWithOneVideo(self):
         self.mock_req.return_value.status_code = 200
         self.mock_req.return_value.content = self.one_video
-        self.assertEqual((NoSubNew.obtainElements(self.videos_tab, self.test_handle)), self.exp_one_video["contents"])
+        self.assertEqual((nosub.obtainElements(self.videos_tab, self.test_handle)), self.exp_one_video["contents"])
 
     def testExtractingWhereThereIsNoSemiColon(self):
         self.mock_req.return_value.status_code = 200
         self.mock_req.return_value.content = self.no_semi
-        self.assertEqual(NoSubNew.obtainElements(self.videos_tab, self.test_handle), self.exp_one_video["contents"])
+        self.assertEqual(nosub.obtainElements(self.videos_tab, self.test_handle), self.exp_one_video["contents"])
 
     def testExtractingVideos(self):
         self.mock_req.return_value.status_code = 200
         self.mock_req.return_value.content = self.loaded_videos
-        self.assertEqual(NoSubNew.obtainElements(self.videos_tab, self.test_handle), self.exp_loaded_videos["contents"])
+        self.assertEqual(nosub.obtainElements(self.videos_tab, self.test_handle), self.exp_loaded_videos["contents"])
 
     def testExtractingReleases(self):
         self.mock_req.return_value.status_code = 200
         self.mock_req.return_value.content = self.loaded_releases
-        self.assertEqual(NoSubNew.obtainElements(self.releases_tab, self.test_handle), self.exp_loaded_releases["contents"])
+        self.assertEqual(nosub.obtainElements(self.releases_tab, self.test_handle), self.exp_loaded_releases["contents"])
 
     def testExtractingVideosOnAReleaseTab(self):
         self.mock_req.return_value.status_code = 200
         self.mock_req.return_value.content = self.loaded_releases
-        self.assertEqual(NoSubNew.obtainElements(self.videos_tab, self.test_handle), None)
+        self.assertEqual(nosub.obtainElements(self.videos_tab, self.test_handle), None)
 
     def testExtractingReleasesOnAVideoTab(self):
         self.mock_req.return_value.status_code = 200
         self.mock_req.return_value.content = self.loaded_videos
-        self.assertEqual(NoSubNew.obtainElements(self.releases_tab, self.test_handle), None)
+        self.assertEqual(nosub.obtainElements(self.releases_tab, self.test_handle), None)
 
     def testExtractingVideosOnNoContent(self):
         self.mock_req.return_value.status_code = 200
         self.mock_req.return_value.content = self.no_content
-        self.assertEqual(NoSubNew.obtainElements(self.videos_tab, self.test_handle), None)
+        self.assertEqual(nosub.obtainElements(self.videos_tab, self.test_handle), None)
 
     def testExtractingReleasesOnNoContent(self):
         self.mock_req.return_value.status_code = 200
         self.mock_req.return_value.content = self.no_content
-        self.assertEqual(NoSubNew.obtainElements(self.releases_tab, self.test_handle), None)
+        self.assertEqual(nosub.obtainElements(self.releases_tab, self.test_handle), None)
 
     def testExtractingVideosFromHomeTab(self):
         self.mock_req.return_value.content = self.loaded_home
-        self.assertEqual(NoSubNew.obtainElements(self.videos_tab, self.test_handle), None)
+        self.assertEqual(nosub.obtainElements(self.videos_tab, self.test_handle), None)
 
     def testExtractingReleasesFromHomeTab(self):
         self.mock_req.return_value.content = self.loaded_home
-        self.assertEqual(NoSubNew.obtainElements(self.releases_tab, self.test_handle), None)
+        self.assertEqual(nosub.obtainElements(self.releases_tab, self.test_handle), None)
 
     def testUnavailableYoutuber(self):
         self.mock_req.return_value.status_code = 404
         self.mock_req.return_value.content = self.not_real
-        self.assertEqual(NoSubNew.obtainElements(self.releases_tab, self.test_handle), None)
+        self.assertEqual(nosub.obtainElements(self.releases_tab, self.test_handle), None)
 
 #With the usage of parameterized queries SQL injections won't be able to occur.
 #I'm still testing them though because SQL injections are garbage data
@@ -527,7 +527,7 @@ class TestDataBase(unittest.TestCase):
         #can be inspected before starting new tests
 
     def setUp(self):
-        self.patcher_db_conn = patch("NoSubNew.connectToDB", side_effect = self.mocked_connection)
+        self.patcher_db_conn = patch("nosub.connectToDB", side_effect = self.mocked_connection)
         self.mock_connection = self.patcher_db_conn.start()
         self.cursor = self.testing_connection.cursor()
 
@@ -546,46 +546,46 @@ class TestDataBase(unittest.TestCase):
     def testAddingNewHandleAndVideo(self):
         valid_handle = "TestGuy1"
         valid_video_id = "AB7pBrudFbg"
-        self.assertEqual(NoSubNew.addId(valid_handle, valid_video_id, self.videos_table), 0)
+        self.assertEqual(nosub.addId(valid_handle, valid_video_id, self.videos_table), 0)
         result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.videos_table} WHERE {self.id_field} = '{valid_video_id}' AND handle = '{valid_handle}';")
         self.assertEqual(result.fetchone()[0], 1)
 
     def testAddingNewHandleAndReleaseId(self):
         valid_handle = "TestGuy1"
         valid_release_id = "OLAK5uy_mqUpJnm37KuCU0D5kF4SdvqTkK0WGIdWg"
-        self.assertEqual(NoSubNew.addId(valid_handle, valid_release_id, self.releases_table), 0)
+        self.assertEqual(nosub.addId(valid_handle, valid_release_id, self.releases_table), 0)
         result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{valid_release_id}' AND handle = '{valid_handle}';")
         self.assertEqual(result.fetchone()[0], 1)
 
     def testAddingAHandleThatIsInvalid(self):
         invalid_handle = "IAmAReallyLongHandleThatCannotOccur"
         valid_release_id = "OLAK5uy_mqUpJnm37KuCU0D5kF4SdvqTkK0WGIdWg"
-        self.assertEqual(NoSubNew.addId(invalid_handle, valid_release_id, self.releases_table), -1)
+        self.assertEqual(nosub.addId(invalid_handle, valid_release_id, self.releases_table), -1)
 
     def testAddingVideoIdThatHasInvalidCharacters(self):
         valid_handle = "TestGuy6"
         invalid_video_id3 = "8^![l]|e783"
-        self.assertEqual(NoSubNew.addId(valid_handle, invalid_video_id3, self.videos_table), -1)
+        self.assertEqual(nosub.addId(valid_handle, invalid_video_id3, self.videos_table), -1)
 
     def testAddingReleaseIdThatHasInvalidCharacters(self):
         valid_handle = "TestGuy6"
         invalid_release_id2 = "OLAK5uy_m!U'Jnm37KuCU0D;kF4SdvqT K0WGIdWw"
-        self.assertEqual(NoSubNew.addId(valid_handle, invalid_release_id2, self.releases_table), -1)
+        self.assertEqual(nosub.addId(valid_handle, invalid_release_id2, self.releases_table), -1)
 
     def testAddingEmptyHandle(self):
         empty = ""
         valid_video_id = "AB7pBrudFbg"
-        self.assertEqual(NoSubNew.addId(empty, valid_video_id, self.videos_table), -1)
+        self.assertEqual(nosub.addId(empty, valid_video_id, self.videos_table), -1)
 
     def testAddingEmptyVideoId(self):
         valid_handle = "TestGuy7"
         empty = ""
-        self.assertEqual(NoSubNew.addId(valid_handle, empty, self.videos_table), -1)
+        self.assertEqual(nosub.addId(valid_handle, empty, self.videos_table), -1)
 
     def testAddingEmptyReleaseId(self):
         valid_handle = "TestGuy7"
         empty = ""
-        self.assertEqual(NoSubNew.addId(valid_handle, empty, self.releases_table), -1)
+        self.assertEqual(nosub.addId(valid_handle, empty, self.releases_table), -1)
 
     #|----------|
     #| Updating |
@@ -594,41 +594,41 @@ class TestDataBase(unittest.TestCase):
     def testUpdatingWithVideoId(self):
         video_handle = "smartereveryday"
         update_video = "lylCYkgC63Q"
-        self.assertEqual(NoSubNew.addId(video_handle, update_video, self.videos_table), 0)
+        self.assertEqual(nosub.addId(video_handle, update_video, self.videos_table), 0)
         result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.videos_table} WHERE {self.id_field} = '{update_video}' AND handle = '{video_handle}';")
         self.assertEqual(result.fetchone()[0], 1)
 
     def testUpdatingWithReleaseId(self):
         release_handle = "NeonNox"
         update_release = "OLAK5uy_mQYefdFy2Kk8UPkdiJA6gnOvu3wfFATHU"
-        self.assertEqual(NoSubNew.addId(release_handle, update_release, self.releases_table), 0)
+        self.assertEqual(nosub.addId(release_handle, update_release, self.releases_table), 0)
         result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{update_release}' AND handle = '{release_handle}';")
         self.assertEqual(result.fetchone()[0], 1)
 
     def testUpdatingWithAnInvalidVideoId(self):
         video_handle = "smartereveryday"
         invalid_update_video = "8^![l]|e783"
-        self.assertEqual(NoSubNew.addId(video_handle, invalid_update_video, self.videos_table), -1)
+        self.assertEqual(nosub.addId(video_handle, invalid_update_video, self.videos_table), -1)
 
     def testUpdatingWithAnInvalidReleaseId(self):
         release_handle = "NeonNox"
         invalid_update_release = "OLAK5uy_m!U'Jnm37KuCU0D;kF4SdvqT K0WGIdWw"
-        self.assertEqual(NoSubNew.addId(release_handle, invalid_update_release, self.releases_table), -1)
+        self.assertEqual(nosub.addId(release_handle, invalid_update_release, self.releases_table), -1)
 
     def testUpdatingUsingAnEmptyHandle(self):
         empty = ""
         update_video = "lylCYkgC63Q"
-        self.assertEqual(NoSubNew.addId(empty, update_video, self.videos_table), -1)
+        self.assertEqual(nosub.addId(empty, update_video, self.videos_table), -1)
 
     def testUpdatingUpdatingUsingAnEmptyVideoId(self):
         video_handle = "smartereveryday"
         empty = ""
-        self.assertEqual(NoSubNew.addId(video_handle, empty, self.videos_table), -1)
+        self.assertEqual(nosub.addId(video_handle, empty, self.videos_table), -1)
 
     def testUpdatingUpdatingUsingAnEmptyReleaseId(self):
         release_handle = "NeonNox"
         empty = ""
-        self.assertEqual(NoSubNew.addId(release_handle, empty, self.releases_table), -1)
+        self.assertEqual(nosub.addId(release_handle, empty, self.releases_table), -1)
 
     #|---------|
     #| Finding |
@@ -637,63 +637,63 @@ class TestDataBase(unittest.TestCase):
     def testFindingValidHandleAndVideoId(self):
         video_handle = "veritasium"
         find_video_id = "P_fHJIYENdI"
-        self.assertEqual(NoSubNew.findId(video_handle, find_video_id, self.videos_table), True)
+        self.assertEqual(nosub.findId(video_handle, find_video_id, self.videos_table), True)
 
     def testFindingValidHandleAndReleaseId(self):
         release_handle = "BuddhaTrixie"
         find_release_id = "OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"
-        self.assertEqual(NoSubNew.findId(release_handle, find_release_id, self.releases_table), True)
+        self.assertEqual(nosub.findId(release_handle, find_release_id, self.releases_table), True)
 
     def testFindingInvalidHandleButValidVideoId(self):
         handle_not_in_db = "HeHeHeHa"
         find_video_id = "P_fHJIYENdI"
-        self.assertEqual(NoSubNew.findId(handle_not_in_db, find_video_id, self.videos_table), False)
+        self.assertEqual(nosub.findId(handle_not_in_db, find_video_id, self.videos_table), False)
 
     def testFindingInvalidHandleButValidReleaseId(self):
         handle_not_in_db = "HeHeHeHa"
         find_release_id = "OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"
-        self.assertEqual(NoSubNew.findId(handle_not_in_db, find_release_id, self.releases_table), False)
+        self.assertEqual(nosub.findId(handle_not_in_db, find_release_id, self.releases_table), False)
 
     def testFindingValidHandleButInvalidVideoId(self):
         video_handle = "veritasium"
         video_id_not_in_db = "7md_gd3HuMQ"
-        self.assertEqual(NoSubNew.findId(video_handle, video_id_not_in_db, self.videos_table), False)
+        self.assertEqual(nosub.findId(video_handle, video_id_not_in_db, self.videos_table), False)
 
     def testFindingValidHandleButInvalidReleaseId(self):
         release_handle = "BuddhaTrixie"
         release_id_not_in_db = "OLAK5uy_ncH3yFRhelTJAfdpWp4CigIDPGnjihZvs"
-        self.assertEqual(NoSubNew.findId(release_handle, release_id_not_in_db, self.videos_table), False)
+        self.assertEqual(nosub.findId(release_handle, release_id_not_in_db, self.videos_table), False)
 
     def testFindingEmptyHandleWithValidId(self):
         video_handle = ""
         video_id_in_db = "P_fHJIYENdI"
-        self.assertEqual(NoSubNew.findId(video_handle, video_id_in_db, self.videos_table), False)
+        self.assertEqual(nosub.findId(video_handle, video_id_in_db, self.videos_table), False)
 
     def testFindingEmptyId(self):
         video_handle = "veritasium"
         video_id_not_in_db = ""
-        self.assertEqual(NoSubNew.findId(video_handle, video_id_not_in_db, self.videos_table), False)
+        self.assertEqual(nosub.findId(video_handle, video_id_not_in_db, self.videos_table), False)
 
     #find handle
     def testFindingValidVideoHandle(self):
         video_handle = "veritasium"
-        self.assertEqual(NoSubNew.findHandle(video_handle, self.videos_table), True)
+        self.assertEqual(nosub.findHandle(video_handle, self.videos_table), True)
 
     def testFindingValidReleaseHandle(self):
         release_handle = "BuddhaTrixie"
-        self.assertEqual(NoSubNew.findHandle(release_handle, self.releases_table), True)
+        self.assertEqual(nosub.findHandle(release_handle, self.releases_table), True)
 
     def testFindingHandleNotInDB(self):
         handle_not_in_db = "HeHeHeHa"
-        self.assertEqual(NoSubNew.findHandle(handle_not_in_db, self.videos_table), False)
+        self.assertEqual(nosub.findHandle(handle_not_in_db, self.videos_table), False)
 
     def testFindingEmptyVideoHandle(self):
         empty_handle = ""
-        self.assertEqual(NoSubNew.findHandle(empty_handle, self.videos_table), False)
+        self.assertEqual(nosub.findHandle(empty_handle, self.videos_table), False)
 
     def testFindingEmptyReleaseHandle(self):
         empty_handle = ""
-        self.assertEqual(NoSubNew.findHandle(empty_handle, self.releases_table), False)
+        self.assertEqual(nosub.findHandle(empty_handle, self.releases_table), False)
 
     #|-------------------|
     #| Duplicate testing |
@@ -703,13 +703,13 @@ class TestDataBase(unittest.TestCase):
         non_dup_handle = "Dummy"
         valid_video_id = "AB7pBrudFbg"
         with self.assertRaises(SystemExit):
-            NoSubNew.addId(non_dup_handle, valid_video_id, self.videos_table)
+            nosub.addId(non_dup_handle, valid_video_id, self.videos_table)
 
     def testInsertingDuplicateReleaseId(self):
         non_dup_handle = "Dummy"
         valid_release_id = "OLAK5uy_mqUpJnm37KuCU0D5kF4SdvqTkK0WGIdWg"
         with self.assertRaises(SystemExit):
-            NoSubNew.addId(non_dup_handle, valid_release_id, self.releases_table)
+            nosub.addId(non_dup_handle, valid_release_id, self.releases_table)
 
     #a duplicate handle would just result in an update
     """
@@ -717,7 +717,7 @@ class TestDataBase(unittest.TestCase):
         valid_handle = "smartereveryday"
         non_dup_id = "JVROsxtjoCw"
         with self.assertRaises(SystemExit):
-            NoSubNew.addId(valid_handle, non_dup_id, self.videos_table)
+            nosub.addId(valid_handle, non_dup_id, self.videos_table)
     """
 
     #|-----------------------|
@@ -731,17 +731,17 @@ class TestDataBase(unittest.TestCase):
     def testAddingSQLInjection(self):
         sql_injection =  "50); DELETE FROM KnownReleases;--        " #try to delete all releases
         valid_handle = "TestGuy8"
-        self.assertEqual( NoSubNew.addId(valid_handle, sql_injection, self.releases_table), -1)
+        self.assertEqual( nosub.addId(valid_handle, sql_injection, self.releases_table), -1)
 
     def testAddingSQLInjection2(self):
         sql_injection2 = "OLAK5uy_le); DELETE FROM KnownReleases;--" #try to delete all releases
         valid_handle = "TestGuy9"
-        self.assertEqual( NoSubNew.addId(valid_handle, sql_injection2, self.releases_table), -1)
+        self.assertEqual( nosub.addId(valid_handle, sql_injection2, self.releases_table), -1)
 
     def testAddingSQLInjection3(self):
         sql_injection3 = "0);--      " #try to insert an id of zero to videos
         valid_handle = "TestGuy10"
-        self.assertEqual(NoSubNew.addId(valid_handle, sql_injection3, self.videos_table), -1)
+        self.assertEqual(nosub.addId(valid_handle, sql_injection3, self.videos_table), -1)
 
     #these sql injections are testing the updating portion
     #SELECT COUNT(*) FROM KnownVideos WHERE handle = ?;
@@ -750,27 +750,27 @@ class TestDataBase(unittest.TestCase):
     def testUpdatingSQLInjection(self):
         video_handle = "smartereveryday"
         sql_injection =  "\"OR 1=1;-- "
-        self.assertEqual( NoSubNew.addId(video_handle, sql_injection, self.videos_table), -1)
+        self.assertEqual( nosub.addId(video_handle, sql_injection, self.videos_table), -1)
 
     def testUpdatingSQLInjection2(self):
         video_handle = "smartereveryday"
         sql_injection2 = "'OR 1=1;-- "
-        self.assertEqual( NoSubNew.addId(video_handle, sql_injection2, self.videos_table), -1)
+        self.assertEqual( nosub.addId(video_handle, sql_injection2, self.videos_table), -1)
 
     def testUpdatingSQLInjection3(self):
         video_handle = "smartereveryday"
         sql_injection3 = "\"\"OR 1=1;--"
-        self.assertEqual(NoSubNew.addId(video_handle, sql_injection3, self.videos_table), -1)
+        self.assertEqual(nosub.addId(video_handle, sql_injection3, self.videos_table), -1)
 
     def testUpdatingSQLInjection4(self):
         video_handle = "smartereveryday"
         sql_injection4 = "2 OR 1=1;--"
-        self.assertEqual(NoSubNew.addId(video_handle, sql_injection4, self.videos_table), -1)
+        self.assertEqual(nosub.addId(video_handle, sql_injection4, self.videos_table), -1)
 
     def testUpdatingSQLInjection5(self):
         release_handle = "NeonNox"
         sql_injection5 = "injected' WHERE 'blue' = 'blue';--      "
-        self.assertEqual(NoSubNew.addId(release_handle, sql_injection5, self.releases_table), -1)
+        self.assertEqual(nosub.addId(release_handle, sql_injection5, self.releases_table), -1)
 
     #these sql injections are for the finding portion
     #SELECT COUNT(id) FROM KnownVideos WHERE known_id = <id> AND handle = <handle>;
@@ -778,32 +778,32 @@ class TestDataBase(unittest.TestCase):
     def testFindingSQLInjection(self):
         video_handle = "veritasium"
         sql_injection =  "\"OR 1=1;-- "
-        self.assertEqual( NoSubNew.findId(video_handle, sql_injection, self.videos_table), False)
+        self.assertEqual( nosub.findId(video_handle, sql_injection, self.videos_table), False)
 
     def testFindingSQLInjection2(self):
         video_handle = "veritasium"
         sql_injection2 = "'OR 1=1;-- "
-        self.assertEqual( NoSubNew.findId(video_handle, sql_injection2, self.videos_table), False)
+        self.assertEqual( nosub.findId(video_handle, sql_injection2, self.videos_table), False)
 
     def testFindingSQLInjection3(self):
         video_handle = "veritasium"
         sql_injection3 = "\"\"OR 1=1;--"
-        self.assertEqual(NoSubNew.findId(video_handle, sql_injection3, self.videos_table), False)
+        self.assertEqual(nosub.findId(video_handle, sql_injection3, self.videos_table), False)
 
     def testFindingSQLInjection4(self):
         video_handle = "veritasium"
         sql_injection4 = "2 OR 1=1;--"
-        self.assertEqual(NoSubNew.findId(video_handle, sql_injection4, self.videos_table), False)
+        self.assertEqual(nosub.findId(video_handle, sql_injection4, self.videos_table), False)
 
     def testFindingSQLInjection5(self):
         release_handle = "BuddhaTrixie"
         sql_injection5 = "injected' WHERE 'blue' = 'blue';--      "
-        self.assertEqual(NoSubNew.findId(release_handle, sql_injection5, self.releases_table), False)
+        self.assertEqual(nosub.findId(release_handle, sql_injection5, self.releases_table), False)
 
     def testFindingSQLInjection6(self):
         release_handle = "BuddhaTrixie"
         sql_injection6 = "LIKE '%HJ%'"
-        self.assertEqual(NoSubNew.findId(release_handle, sql_injection6, self.videos_table), False)
+        self.assertEqual(nosub.findId(release_handle, sql_injection6, self.videos_table), False)
 
 #Separate method so that a different testing DB can be used
 class ClearDataBase(unittest.TestCase):
@@ -862,7 +862,7 @@ class ClearDataBase(unittest.TestCase):
         cls.testing_connection.close()
 
     def setUp(self):
-        self.patcher_db_conn = patch("NoSubNew.connectToDB", side_effect = self.mocked_connection)
+        self.patcher_db_conn = patch("nosub.connectToDB", side_effect = self.mocked_connection)
         self.mock_connection = self.patcher_db_conn.start()
 
     def tearDown(self):
@@ -878,8 +878,8 @@ class ClearDataBase(unittest.TestCase):
         cursor = self.testing_connection.cursor()
         option = "--clear-knowns"
         with self.assertRaises(SystemExit) as ex:
-            sys.argv = ["NoSubNew.py", "-f", "cur_dir_test.txt", option]
-            NoSubNew.main()
+            sys.argv = ["nosub.py", "-f", "cur_dir_test.txt", option]
+            nosub.main()
             video_result = cursor.execute(f"SELECT COUNT(id) FROM {self.videos_table};")
             release_result = cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table};")
             self.assertEqual(video_result.fetchone()[0], 0)
@@ -952,7 +952,7 @@ class NormalExecutionTesting(unittest.TestCase):
 
     def setUp(self):
         self.patcher_request = patch("requests.get", side_effect = self.mockObtainHtmls)
-        self.patcher_db_conn = patch("NoSubNew.connectToDB", side_effect = self.mocked_connection)
+        self.patcher_db_conn = patch("nosub.connectToDB", side_effect = self.mocked_connection)
         self.patcher_mock_browser = patch("webbrowser.open_new_tab")
 
         self.patcher_request.start()
@@ -1044,8 +1044,8 @@ class NormalExecutionTesting(unittest.TestCase):
     #with no stopping point and time frame given this should just load the first videos seen
     def testNormalFromFreshStartWithDefaultSettings(self):
         self.clearDB()
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/videos.txt"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt"]
+        nosub.main()
         self.assertEqual(self.mock_browser.call_count, 5)
         call_list =\
         [
@@ -1072,12 +1072,12 @@ class NormalExecutionTesting(unittest.TestCase):
         cursor.execute(add_videos)
         self.testing_connection.commit()
 
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/verbose_video.txt", "-v"]
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_video.txt", "-v"]
         #redirect output to a file
         with open("verbose_test_videos.txt", "w") as verbose_test:
             original_out = sys.stdout
             sys.stdout = verbose_test
-            NoSubNew.main()
+            nosub.main()
             sys.stdout = original_out
 
 
@@ -1092,8 +1092,8 @@ class NormalExecutionTesting(unittest.TestCase):
 
     def testNormalFromFreshStartWithMultipleFilesDefaultSettings(self):
         self.clearDB()
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/videos_split_1.txt", "./TestFiles/ExecutionTesting/videos_split_2.txt"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos_split_1.txt", "./TestFiles/ExecutionTesting/videos_split_2.txt"]
+        nosub.main()
         self.assertEqual(self.mock_browser.call_count, 5)
         call_list =\
         [
@@ -1124,8 +1124,8 @@ class NormalExecutionTesting(unittest.TestCase):
         cursor.execute(add_videos)
         self.testing_connection.commit()
 
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/videos.txt"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt"]
+        nosub.main()
         #3 from RomanianTvee
         #2 from WillTennyson
         #1 from an0nymooose
@@ -1163,8 +1163,8 @@ class NormalExecutionTesting(unittest.TestCase):
         cursor.execute(add_videos)
         self.testing_connection.commit()
 
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/videos.txt"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt"]
+        nosub.main()
 
         #24 from RomanianTvee
         #6 from WillTennyson
@@ -1236,8 +1236,8 @@ class NormalExecutionTesting(unittest.TestCase):
         cursor.execute(add_videos)
         self.testing_connection.commit()
 
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-t", "7", "days"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-t", "7", "days"]
+        nosub.main()
 
         #5 from RomanianTvee -> update id pqYu8-JjXNQ
         #1 from WillTennyson -> update id T3d-c1TAQQg
@@ -1265,8 +1265,8 @@ class NormalExecutionTesting(unittest.TestCase):
     def testNormalFreshWithTimeFrameDefaultSettings(self):
         self.clearDB()
 
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-t", "7", "days"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-t", "7", "days"]
+        nosub.main()
 
         #14 from RomanianTvee
         #1 from WillTennyson
@@ -1302,8 +1302,8 @@ class NormalExecutionTesting(unittest.TestCase):
     #tests if max loads will mess up default behavior without a time frame on a fresh start
     def testNormalFromFreshStartWithDefaultSettingsSpecifyingMax(self):
         self.clearDB()
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-n", "2"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-n", "2"]
+        nosub.main()
         self.assertEqual(self.mock_browser.call_count, 5)
         call_list =\
         [
@@ -1330,8 +1330,8 @@ class NormalExecutionTesting(unittest.TestCase):
         cursor.execute(add_videos)
         self.testing_connection.commit()
 
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-n", "2"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-n", "2"]
+        nosub.main()
 
         self.assertEqual(self.mock_browser.call_count, 8)
         call_list =\
@@ -1352,8 +1352,8 @@ class NormalExecutionTesting(unittest.TestCase):
     def testNormalFreshWithTimeFrameAndMaxLoadsSetToOne(self):
         self.clearDB()
 
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-t", "3", "weeks", "-n", "1"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-t", "3", "weeks", "-n", "1"]
+        nosub.main()
 
         self.assertEqual(self.mock_browser.call_count, 4)
         call_list =\
@@ -1380,8 +1380,8 @@ class NormalExecutionTesting(unittest.TestCase):
         cursor.execute(add_videos)
         self.testing_connection.commit()
 
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-t", "3", "weeks", "-n", "2"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-t", "3", "weeks", "-n", "2"]
+        nosub.main()
 
 
         #2 from RomanianTvee -> update id pqYu8-JjXNQ
@@ -1406,8 +1406,8 @@ class NormalExecutionTesting(unittest.TestCase):
 
     def testNormalWithNewLineFile(self):
         self.clearDB()
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/newlines.txt",]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/newlines.txt",]
+        nosub.main()
         self.assertEqual(self.mock_browser.call_count, 0)
         cursor = self.testing_connection.cursor()
         cursor.execute("SELECT COUNT(*) FROM KnownVideos")
@@ -1415,8 +1415,8 @@ class NormalExecutionTesting(unittest.TestCase):
 
     def testNormalWithEmptyFile(self):
         self.clearDB()
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/empty.txt"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/empty.txt"]
+        nosub.main()
         self.assertEqual(self.mock_browser.call_count, 0)
         cursor = self.testing_connection.cursor()
         cursor.execute("SELECT COUNT(*) FROM KnownVideos")
@@ -1425,9 +1425,9 @@ class NormalExecutionTesting(unittest.TestCase):
     #the /usr/bin/sh does have read permission for everyone
     def testNormalPassingABinary(self):
         self.clearDB()
-        sys.argv = ["NoSubNew.py", "-f", "/usr/bin/sh"]
+        sys.argv = ["nosub.py", "-f", "/usr/bin/sh"]
         with self.assertRaises(UnicodeDecodeError):
-            NoSubNew.main()
+            nosub.main()
 
         cursor = self.testing_connection.cursor()
         cursor.execute("SELECT COUNT(*) FROM KnownVideos")
@@ -1487,7 +1487,7 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     def setUp(self):
         self.patcher_request = patch("requests.get", side_effect = self.mockObtainHtmls)
-        self.patcher_db_conn = patch("NoSubNew.connectToDB", side_effect = self.mocked_connection)
+        self.patcher_db_conn = patch("nosub.connectToDB", side_effect = self.mocked_connection)
         self.patcher_mock_browser = patch("webbrowser.open_new_tab")
 
         self.patcher_request.start()
@@ -1559,8 +1559,8 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     def testReleaseFromFreshStartWithDefaultSettings(self):
         self.clearDB()
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-r"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-r"]
+        nosub.main()
         self.assertEqual(self.mock_browser.call_count, 3)
         call_list =\
         [
@@ -1586,12 +1586,12 @@ class ReleaseExecutionTesting(unittest.TestCase):
         cursor.execute(add_videos)
         self.testing_connection.commit()
 
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/verbose_release.txt", "-v", "-r"]
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_release.txt", "-v", "-r"]
         #redirect output to a file
         with open("verbose_test_releases.txt", "w") as verbose_test:
             original_out = sys.stdout
             sys.stdout = verbose_test
-            NoSubNew.main()
+            nosub.main()
             sys.stdout = original_out
 
 
@@ -1606,8 +1606,8 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     def testReleaseFromFreshStartWithMultipleFilesDefaultSettings(self):
         self.clearDB()
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/releases_split_1.txt", "./TestFiles/ExecutionTesting/releases_split_2.txt", "-r"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases_split_1.txt", "./TestFiles/ExecutionTesting/releases_split_2.txt", "-r"]
+        nosub.main()
         self.assertEqual(self.mock_browser.call_count, 3)
         call_list =\
         [
@@ -1635,8 +1635,8 @@ class ReleaseExecutionTesting(unittest.TestCase):
         cursor.execute(add_releases)
         self.testing_connection.commit()
 
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-r"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-r"]
+        nosub.main()
         #2 from NeonNox
         #0 from TomCardy
         #1 from BuddhaTrixie
@@ -1663,8 +1663,8 @@ class ReleaseExecutionTesting(unittest.TestCase):
         cursor.execute(add_releases)
         self.testing_connection.commit()
 
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-r"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-r"]
+        nosub.main()
 
         #2 NeonNox
         #2 TomCardy
@@ -1687,16 +1687,16 @@ class ReleaseExecutionTesting(unittest.TestCase):
         self.clearDB()
 
         with self.assertRaises(SystemExit):
-            sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-t", "7", "days", "-r"]
-            NoSubNew.main()
+            sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-t", "7", "days", "-r"]
+            nosub.main()
 
         self.assertEqual(self.mock_browser.call_count, 0)
 
     #since it's in default settings at fresh it should only load one video
     def testReleaseFromFreshStartWithDefaultSettingsSpecifyingMaxOf2(self):
         self.clearDB()
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-n", "2", "-r"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-n", "2", "-r"]
+        nosub.main()
         self.assertEqual(self.mock_browser.call_count, 3)
         call_list =\
         [
@@ -1723,8 +1723,8 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
         self.testing_connection.commit()
 
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-n", "2", "-r"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-n", "2", "-r"]
+        nosub.main()
 
         #1 Neon Nox
         #2 Tom Cardy
@@ -1746,15 +1746,15 @@ class ReleaseExecutionTesting(unittest.TestCase):
         self.clearDB()
 
         with self.assertRaises(SystemExit):
-            sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-t", "3", "weeks", "-n", "1", "-r"]
-            NoSubNew.main()
+            sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-t", "3", "weeks", "-n", "1", "-r"]
+            nosub.main()
 
         self.assertEqual(self.mock_browser.call_count, 0)
 
     def testReleaseWithNewLineFile(self):
         self.clearDB()
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/newlines.txt", "-r"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/newlines.txt", "-r"]
+        nosub.main()
         self.assertEqual(self.mock_browser.call_count, 0)
         cursor = self.testing_connection.cursor()
         cursor.execute("SELECT COUNT(*) FROM KnownVideos")
@@ -1762,8 +1762,8 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     def testReleaseWithEmptyFile(self):
         self.clearDB()
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/empty.txt", "-r"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/empty.txt", "-r"]
+        nosub.main()
         self.assertEqual(self.mock_browser.call_count, 0)
         cursor = self.testing_connection.cursor()
         cursor.execute("SELECT COUNT(*) FROM KnownVideos")
@@ -1772,16 +1772,16 @@ class ReleaseExecutionTesting(unittest.TestCase):
     #the /usr/bin/sh does have read permission for everyone
     def testReleasePassingABinary(self):
         self.clearDB()
-        sys.argv = ["NoSubNew.py", "-f", "/usr/bin/sh", "-r"]
+        sys.argv = ["nosub.py", "-f", "/usr/bin/sh", "-r"]
         with self.assertRaises(UnicodeDecodeError):
-            NoSubNew.main()
+            nosub.main()
 
         cursor = self.testing_connection.cursor()
         cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(cursor.fetchone()[0], 0)
 
 #since both execution is just calling normalExec and releaseExec
-#it only needs to test if it'll get all the videos
+#it only needs to test if it'll get all the contents
 class BothExecutionTesting(unittest.TestCase):
     releases_table = "KnownReleases"
     videos_table = "KnownVideos"
@@ -1868,7 +1868,7 @@ class BothExecutionTesting(unittest.TestCase):
 
     def setUp(self):
         self.patcher_request = patch("requests.get", side_effect = self.mockObtainHtmls)
-        self.patcher_db_conn = patch("NoSubNew.connectToDB", side_effect = self.mocked_connection)
+        self.patcher_db_conn = patch("nosub.connectToDB", side_effect = self.mocked_connection)
         self.patcher_mock_browser = patch("webbrowser.open_new_tab")
 
         self.patcher_request.start()
@@ -1995,10 +1995,10 @@ class BothExecutionTesting(unittest.TestCase):
             result = cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{new_buddha_id}' AND handle = '{buddha_handle}';")
             self.assertEqual(result.fetchone()[0], 1)
 
-    def testBothExecutionDefault(self):
+    def testBothExecutionFreshDefault(self):
         self.clearDB()
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/both.txt", "-b"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/both.txt", "-b"]
+        nosub.main()
         self.assertEqual(self.mock_browser.call_count, 8)
         call_list =\
         [
@@ -2011,33 +2011,28 @@ class BothExecutionTesting(unittest.TestCase):
             call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc", autoraise = False), #tom
             call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0", autoraise = False), #buddha
         ]
-        #order doesn't really matter if every thing is loaded
-        #also would be annoying having to order it
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
 
-    """
-    def testBothWithTimeFrame(self):
+    #Releases don't use the time frame, but videos do
+    def testBothFreshWithTimeFrameDefault(self):
         self.clearDB()
-        sys.argv = ["NoSubNew.py", "-f", "./TestFiles/ExecutionTesting/both.txt", "-b", "-t", "2", "days"]
-        NoSubNew.main()
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/both.txt", "-b", "-t", "2", "days"]
+        nosub.main()
         self.assertEqual(self.mock_browser.call_count, 8)
         call_list =\
         [
             call("https://www.youtube.com/watch?v=pqYu8-JjXNQ", autoraise = False), #rtv
-            call("https://www.youtube.com/watch?v=RzNkY1_Nk3o", autoraise = False), #mooose
-            call("https://www.youtube.com/watch?v=QEJpZjg8GuA", autoraise = False), #tech connect
-            call("https://www.youtube.com/watch?v=fq--H6KvqUg", autoraise = False), #doubt tech
-            call("https://www.youtube.com/watch?v=T3d-c1TAQQg", autoraise = False), #will tenny
+            call("https://www.youtube.com/watch?v=W2DdVFeq1WM", autoraise = False), #rtv
+            call("https://www.youtube.com/watch?v=dyFCyOWq8PY", autoraise = False), #rtv
+            call("https://www.youtube.com/watch?v=3W0yMU06_pY", autoraise = False), #rtv
+            call("https://www.youtube.com/watch?v=wyf_za8nQDw", autoraise = False), #rtv
             call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA", autoraise = False), #neon
             call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc", autoraise = False), #tom
             call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0", autoraise = False), #buddha
         ]
-        #order doesn't really matter if every thing is loaded
-        #also would be annoying having to order it
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
-    """
 
 if __name__ == '__main__':
     unittest.main()

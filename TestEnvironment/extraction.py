@@ -15,7 +15,7 @@ constant_yt = Constant_YT(YTER_PAGE = "https://www.youtube.com/@", YT_VIDEOS = "
 def main():
     parser = argparse.ArgumentParser(
         prog="Youtube Page Extractor",
-        description="Utility program to extract the data returned by a youtuber's homepage",
+        description="Utility program to extract the data returned by a youtuber's homepage. Will only work on videos and releases",
     )
 
     parser.add_argument("file", type=str, help="File containing a list of urls separated by newlines to extract", nargs=1)
@@ -29,31 +29,32 @@ def main():
 
     if not os.path.isfile(args.file[0]):
         print(f"File {args.file[0]} does not exist", file = sys.stderr)
-
-    sys.exit(exit_codes.EXIT_FAILURE)
+        sys.exit(exit_codes.EXIT_FAILURE)
 
     with open(args.file[0], "r") as url_file:
-        for raw_line in url_file.read():
+        for raw_line in url_file:
+            if len(raw_line) == 0:
+                continue
+
             split_line = raw_line.split(",")
             if len(split_line) != 2:
                 print(f"Line {raw_line} needs the url and the desired base file name separated by a comma", file = sys.stderr)
-                sys.exit(exit_codes.EXIT_FAILURE)
+                continue
 
             url = split_line[0].strip()
             if constant_yt.YTER_PAGE not in url:
                 print(f"URL {url} should be a youtuber's page which has the @", file = sys.stderr)
-                sys.exit(exit_codes.EXIT_FAILURE)
+                continue
 
             base_file_name = split_line[1].strip()
             html_file = base_file_name + ".html"
-            #json_file = base_file_name + ".json"
+            json_file = base_file_name + ".json"
 
             response = requests.get(url)
             soup = BeautifulSoup(response.content, "html.parser")
             with open(html_file, "w") as file:
                 file.write(str(soup))
 
-            """
             if response.status_code == 404:
                 continue
 
@@ -77,30 +78,28 @@ def main():
                 json_data = json.loads(searchScript[searchScript.index("{"):])
 
             tab_returned = None
-            tab = None
+            title = None
             if constant_yt.YT_VIDEOS in url:
-                tab = "Videos"
+                title = "Videos"
             elif constant_yt.YT_RELEASES in url:
-                tab = "Releases"
+                title = "Releases"
 
-            if tab:
+            if title:
                 for tab in json_data["contents"]["twoColumnBrowseResultsRenderer"]["tabs"]:
                     try:
                         #if the page is not loaded directly to the expected tab it will not
                         #have the content field
-                        if tab["tabRenderer"]["title"] == tab:
+                        if tab["tabRenderer"]["title"] == title:
                             tab_returned = tab["tabRenderer"]["content"]["richGridRenderer"]["contents"]
                             break
                     except KeyError:
                         break
 
-                if tab:
+                if tab_returned:
                     with open(json_file, "w") as file:
                         json.dump(tab_returned, file, indent=4)
                 else:
                     print(f"No tab for {tab} for the url {url}")
-                """
-
 
 if __name__ == "__main__":
     main()
