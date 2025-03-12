@@ -8,7 +8,7 @@
   Python program that I made so that I don't have to login to Youtube to look at notifications for recent uploads. No need to explicity make an account to explicitly subscribe.
   Could be used for some privacy, but that depends on your browser and how it's configured and other factors.
 
-  The default behavior of the program, as in when the user simply passes in files such as `NoSub.py file_of_tubers.txt`, is to go through the lines of the youtuber handles and load
+  The default behavior of the program, as in when the user simply passes in files such as `NoSub.py -f file_of_tubers.txt`, is to go through the lines of the youtuber handles and load
   videos up until it finds a known id from a previous execution. If it's a fresh start or a handle that has not been seen before, as in the youtuber's handle is not in the
   database, the default behavior is to load the first video. This is done because there is no known stopping point. To change this behavior a time frame can be given
   which will lead to the program going out to find videos within the frame. However, this behavior only works on videos and not releases as releases do not have a time when they were published.
