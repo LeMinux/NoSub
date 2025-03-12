@@ -1049,11 +1049,11 @@ class NormalExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 5)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ", autoraise = False), #rtv
-            call("https://www.youtube.com/watch?v=RzNkY1_Nk3o", autoraise = False), #mooose
-            call("https://www.youtube.com/watch?v=QEJpZjg8GuA", autoraise = False), #tech connect
-            call("https://www.youtube.com/watch?v=fq--H6KvqUg", autoraise = False), #doubt tech
-            call("https://www.youtube.com/watch?v=T3d-c1TAQQg", autoraise = False)  #will tenny
+            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ"), #rtv
+            call("https://www.youtube.com/watch?v=RzNkY1_Nk3o"), #mooose
+            call("https://www.youtube.com/watch?v=QEJpZjg8GuA"), #tech connect
+            call("https://www.youtube.com/watch?v=fq--H6KvqUg"), #doubt tech
+            call("https://www.youtube.com/watch?v=T3d-c1TAQQg")  #will tenny
         ]
         #order doesn't really matter if every thing is loaded
         #also would be annoying having to order it
@@ -1097,11 +1097,11 @@ class NormalExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 5)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=RzNkY1_Nk3o", autoraise = False),
-            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ", autoraise = False),
-            call("https://www.youtube.com/watch?v=QEJpZjg8GuA", autoraise = False),
-            call("https://www.youtube.com/watch?v=fq--H6KvqUg", autoraise = False),
-            call("https://www.youtube.com/watch?v=T3d-c1TAQQg", autoraise = False)
+            call("https://www.youtube.com/watch?v=RzNkY1_Nk3o"),
+            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ"),
+            call("https://www.youtube.com/watch?v=QEJpZjg8GuA"),
+            call("https://www.youtube.com/watch?v=fq--H6KvqUg"),
+            call("https://www.youtube.com/watch?v=T3d-c1TAQQg")
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1134,13 +1134,13 @@ class NormalExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 7)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ", autoraise = False), #RTV first id seen
-            call("https://www.youtube.com/watch?v=W2DdVFeq1WM", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=dyFCyOWq8PY", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=T3d-c1TAQQg", autoraise = False), #Tennyson first id seen
-            call("https://www.youtube.com/watch?v=lFzccuoS3ag", autoraise = False), #Tennyson
-            call("https://www.youtube.com/watch?v=RzNkY1_Nk3o", autoraise = False), #an0ny
-            call("https://www.youtube.com/watch?v=fq--H6KvqUg", autoraise = False)  #doubt tech
+            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ"), #RTV first id seen
+            call("https://www.youtube.com/watch?v=W2DdVFeq1WM"), #RTV
+            call("https://www.youtube.com/watch?v=dyFCyOWq8PY"), #RTV
+            call("https://www.youtube.com/watch?v=T3d-c1TAQQg"), #Tennyson first id seen
+            call("https://www.youtube.com/watch?v=lFzccuoS3ag"), #Tennyson
+            call("https://www.youtube.com/watch?v=RzNkY1_Nk3o"), #an0ny
+            call("https://www.youtube.com/watch?v=fq--H6KvqUg")  #doubt tech
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1174,48 +1174,48 @@ class NormalExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 42)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ", autoraise = False), #RTV first id seen
-            call("https://www.youtube.com/watch?v=W2DdVFeq1WM", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=dyFCyOWq8PY", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=3W0yMU06_pY", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=wyf_za8nQDw", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=tZ1_HM2UtM8", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=PRZSddxEXwA", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=CRuqkK7wRxg", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=YOYNcGFZJhg", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=AO0kkIPov4I", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=oYAlnz2N4S0", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=Y8x9DzeKcXI", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=vwjZ7kYlc3I", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=L1ZZo4uZJ44", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=v9e77EYTHdM", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=dGAvFmVhU5c", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=OW_aVhwoaiQ", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=36CHAzlDXkY", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=e8StviDE3ms", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=oOgsIytfDAU", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=Rtbu_gIYP4A", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=DG8Gh1jxTiM", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=QV4H8HqUzZI", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=Jdloauunvlg", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=P0CJ8sCUyoY", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=oLqhEcpXN3g", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=KPhXm2LcTLM", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=sThB6Tw2zyI", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=tJkTVh4lkxk", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=uvG7jc4OUrA", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=T3d-c1TAQQg", autoraise = False), #Tennyson first id seen
-            call("https://www.youtube.com/watch?v=lFzccuoS3ag", autoraise = False), #Tennyson
-            call("https://www.youtube.com/watch?v=Y3oXlvHhdsk", autoraise = False), #Tennyson
-            call("https://www.youtube.com/watch?v=kxYI20JV3O8", autoraise = False), #Tennyson
-            call("https://www.youtube.com/watch?v=kIWXzXLkau4", autoraise = False), #Tennyson
-            call("https://www.youtube.com/watch?v=eQTcMErJbxI", autoraise = False), #Tennyson
-            call("https://www.youtube.com/watch?v=QEJpZjg8GuA", autoraise = False), #Tech Connect first id seen
-            call("https://www.youtube.com/watch?v=HnMuNCl7tZ8", autoraise = False), #Tech Connect
-            call("https://www.youtube.com/watch?v=fq--H6KvqUg", autoraise = False), #doubt tech first id seen
-            call("https://www.youtube.com/watch?v=o5FQH7LxpU8", autoraise = False), #doubt tech
-            call("https://www.youtube.com/watch?v=H3eIKQz1ISs", autoraise = False), #doubt tech
-            call("https://www.youtube.com/watch?v=1yGlS-TjVJs", autoraise = False), #doubt tech
+            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ"), #RTV first id seen
+            call("https://www.youtube.com/watch?v=W2DdVFeq1WM"), #RTV
+            call("https://www.youtube.com/watch?v=dyFCyOWq8PY"), #RTV
+            call("https://www.youtube.com/watch?v=3W0yMU06_pY"), #RTV
+            call("https://www.youtube.com/watch?v=wyf_za8nQDw"), #RTV
+            call("https://www.youtube.com/watch?v=tZ1_HM2UtM8"), #RTV
+            call("https://www.youtube.com/watch?v=PRZSddxEXwA"), #RTV
+            call("https://www.youtube.com/watch?v=CRuqkK7wRxg"), #RTV
+            call("https://www.youtube.com/watch?v=YOYNcGFZJhg"), #RTV
+            call("https://www.youtube.com/watch?v=AO0kkIPov4I"), #RTV
+            call("https://www.youtube.com/watch?v=oYAlnz2N4S0"), #RTV
+            call("https://www.youtube.com/watch?v=Y8x9DzeKcXI"), #RTV
+            call("https://www.youtube.com/watch?v=vwjZ7kYlc3I"), #RTV
+            call("https://www.youtube.com/watch?v=L1ZZo4uZJ44"), #RTV
+            call("https://www.youtube.com/watch?v=v9e77EYTHdM"), #RTV
+            call("https://www.youtube.com/watch?v=dGAvFmVhU5c"), #RTV
+            call("https://www.youtube.com/watch?v=OW_aVhwoaiQ"), #RTV
+            call("https://www.youtube.com/watch?v=36CHAzlDXkY"), #RTV
+            call("https://www.youtube.com/watch?v=e8StviDE3ms"), #RTV
+            call("https://www.youtube.com/watch?v=oOgsIytfDAU"), #RTV
+            call("https://www.youtube.com/watch?v=Rtbu_gIYP4A"), #RTV
+            call("https://www.youtube.com/watch?v=DG8Gh1jxTiM"), #RTV
+            call("https://www.youtube.com/watch?v=QV4H8HqUzZI"), #RTV
+            call("https://www.youtube.com/watch?v=Jdloauunvlg"), #RTV
+            call("https://www.youtube.com/watch?v=P0CJ8sCUyoY"), #RTV
+            call("https://www.youtube.com/watch?v=oLqhEcpXN3g"), #RTV
+            call("https://www.youtube.com/watch?v=KPhXm2LcTLM"), #RTV
+            call("https://www.youtube.com/watch?v=sThB6Tw2zyI"), #RTV
+            call("https://www.youtube.com/watch?v=tJkTVh4lkxk"), #RTV
+            call("https://www.youtube.com/watch?v=uvG7jc4OUrA"), #RTV
+            call("https://www.youtube.com/watch?v=T3d-c1TAQQg"), #Tennyson first id seen
+            call("https://www.youtube.com/watch?v=lFzccuoS3ag"), #Tennyson
+            call("https://www.youtube.com/watch?v=Y3oXlvHhdsk"), #Tennyson
+            call("https://www.youtube.com/watch?v=kxYI20JV3O8"), #Tennyson
+            call("https://www.youtube.com/watch?v=kIWXzXLkau4"), #Tennyson
+            call("https://www.youtube.com/watch?v=eQTcMErJbxI"), #Tennyson
+            call("https://www.youtube.com/watch?v=QEJpZjg8GuA"), #Tech Connect first id seen
+            call("https://www.youtube.com/watch?v=HnMuNCl7tZ8"), #Tech Connect
+            call("https://www.youtube.com/watch?v=fq--H6KvqUg"), #doubt tech first id seen
+            call("https://www.youtube.com/watch?v=o5FQH7LxpU8"), #doubt tech
+            call("https://www.youtube.com/watch?v=H3eIKQz1ISs"), #doubt tech
+            call("https://www.youtube.com/watch?v=1yGlS-TjVJs"), #doubt tech
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1247,14 +1247,14 @@ class NormalExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 8)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ", autoraise = False), #RTV first id seen
-            call("https://www.youtube.com/watch?v=W2DdVFeq1WM", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=dyFCyOWq8PY", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=3W0yMU06_pY", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=wyf_za8nQDw", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=T3d-c1TAQQg", autoraise = False), #Will Tenny
-            call("https://www.youtube.com/watch?v=fq--H6KvqUg", autoraise = False), #doubt tech
-            call("https://www.youtube.com/watch?v=QEJpZjg8GuA", autoraise = False), #Tech Connect
+            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ"), #RTV first id seen
+            call("https://www.youtube.com/watch?v=W2DdVFeq1WM"), #RTV
+            call("https://www.youtube.com/watch?v=dyFCyOWq8PY"), #RTV
+            call("https://www.youtube.com/watch?v=3W0yMU06_pY"), #RTV
+            call("https://www.youtube.com/watch?v=wyf_za8nQDw"), #RTV
+            call("https://www.youtube.com/watch?v=T3d-c1TAQQg"), #Will Tenny
+            call("https://www.youtube.com/watch?v=fq--H6KvqUg"), #doubt tech
+            call("https://www.youtube.com/watch?v=QEJpZjg8GuA"), #Tech Connect
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1276,24 +1276,24 @@ class NormalExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 18)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ", autoraise = False), #RTV first id seen
-            call("https://www.youtube.com/watch?v=W2DdVFeq1WM", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=dyFCyOWq8PY", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=3W0yMU06_pY", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=wyf_za8nQDw", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=tZ1_HM2UtM8", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=PRZSddxEXwA", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=CRuqkK7wRxg", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=YOYNcGFZJhg", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=AO0kkIPov4I", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=oYAlnz2N4S0", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=Y8x9DzeKcXI", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=vwjZ7kYlc3I", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=L1ZZo4uZJ44", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=v9e77EYTHdM", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=QEJpZjg8GuA", autoraise = False), #Tech Connect first id seen
-            call("https://www.youtube.com/watch?v=fq--H6KvqUg", autoraise = False), #doubt tech first id seen
-            call("https://www.youtube.com/watch?v=T3d-c1TAQQg", autoraise = False), #Will Tenny
+            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ"), #RTV first id seen
+            call("https://www.youtube.com/watch?v=W2DdVFeq1WM"), #RTV
+            call("https://www.youtube.com/watch?v=dyFCyOWq8PY"), #RTV
+            call("https://www.youtube.com/watch?v=3W0yMU06_pY"), #RTV
+            call("https://www.youtube.com/watch?v=wyf_za8nQDw"), #RTV
+            call("https://www.youtube.com/watch?v=tZ1_HM2UtM8"), #RTV
+            call("https://www.youtube.com/watch?v=PRZSddxEXwA"), #RTV
+            call("https://www.youtube.com/watch?v=CRuqkK7wRxg"), #RTV
+            call("https://www.youtube.com/watch?v=YOYNcGFZJhg"), #RTV
+            call("https://www.youtube.com/watch?v=AO0kkIPov4I"), #RTV
+            call("https://www.youtube.com/watch?v=oYAlnz2N4S0"), #RTV
+            call("https://www.youtube.com/watch?v=Y8x9DzeKcXI"), #RTV
+            call("https://www.youtube.com/watch?v=vwjZ7kYlc3I"), #RTV
+            call("https://www.youtube.com/watch?v=L1ZZo4uZJ44"), #RTV
+            call("https://www.youtube.com/watch?v=v9e77EYTHdM"), #RTV
+            call("https://www.youtube.com/watch?v=QEJpZjg8GuA"), #Tech Connect first id seen
+            call("https://www.youtube.com/watch?v=fq--H6KvqUg"), #doubt tech first id seen
+            call("https://www.youtube.com/watch?v=T3d-c1TAQQg"), #Will Tenny
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1307,11 +1307,11 @@ class NormalExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 5)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ", autoraise = False), #rtv
-            call("https://www.youtube.com/watch?v=RzNkY1_Nk3o", autoraise = False), #mooose
-            call("https://www.youtube.com/watch?v=QEJpZjg8GuA", autoraise = False), #tech connect
-            call("https://www.youtube.com/watch?v=fq--H6KvqUg", autoraise = False), #doubt tech
-            call("https://www.youtube.com/watch?v=T3d-c1TAQQg", autoraise = False)  #will tenny
+            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ"), #rtv
+            call("https://www.youtube.com/watch?v=RzNkY1_Nk3o"), #mooose
+            call("https://www.youtube.com/watch?v=QEJpZjg8GuA"), #tech connect
+            call("https://www.youtube.com/watch?v=fq--H6KvqUg"), #doubt tech
+            call("https://www.youtube.com/watch?v=T3d-c1TAQQg")  #will tenny
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1336,14 +1336,14 @@ class NormalExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 8)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ", autoraise = False), #RTV first id seen
-            call("https://www.youtube.com/watch?v=W2DdVFeq1WM", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=T3d-c1TAQQg", autoraise = False), #Tennyson first id seen
-            call("https://www.youtube.com/watch?v=lFzccuoS3ag", autoraise = False), #Tennyson
-            call("https://www.youtube.com/watch?v=QEJpZjg8GuA", autoraise = False), #Tech Connect first id seen
-            call("https://www.youtube.com/watch?v=HnMuNCl7tZ8", autoraise = False), #Tech Connect
-            call("https://www.youtube.com/watch?v=fq--H6KvqUg", autoraise = False), #doubt tech first id seen
-            call("https://www.youtube.com/watch?v=o5FQH7LxpU8", autoraise = False), #doubt tech
+            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ"), #RTV first id seen
+            call("https://www.youtube.com/watch?v=W2DdVFeq1WM"), #RTV
+            call("https://www.youtube.com/watch?v=T3d-c1TAQQg"), #Tennyson first id seen
+            call("https://www.youtube.com/watch?v=lFzccuoS3ag"), #Tennyson
+            call("https://www.youtube.com/watch?v=QEJpZjg8GuA"), #Tech Connect first id seen
+            call("https://www.youtube.com/watch?v=HnMuNCl7tZ8"), #Tech Connect
+            call("https://www.youtube.com/watch?v=fq--H6KvqUg"), #doubt tech first id seen
+            call("https://www.youtube.com/watch?v=o5FQH7LxpU8"), #doubt tech
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1358,10 +1358,10 @@ class NormalExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 4)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ", autoraise = False), #RTV first id seen
-            call("https://www.youtube.com/watch?v=QEJpZjg8GuA", autoraise = False), #Tech Connect first id seen
-            call("https://www.youtube.com/watch?v=fq--H6KvqUg", autoraise = False), #doubt tech first id seen
-            call("https://www.youtube.com/watch?v=T3d-c1TAQQg", autoraise = False), #Will Tenny
+            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ"), #RTV first id seen
+            call("https://www.youtube.com/watch?v=QEJpZjg8GuA"), #Tech Connect first id seen
+            call("https://www.youtube.com/watch?v=fq--H6KvqUg"), #doubt tech first id seen
+            call("https://www.youtube.com/watch?v=T3d-c1TAQQg"), #Will Tenny
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1392,14 +1392,14 @@ class NormalExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 8)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ", autoraise = False), #RTV first id seen
-            call("https://www.youtube.com/watch?v=W2DdVFeq1WM", autoraise = False), #RTV
-            call("https://www.youtube.com/watch?v=T3d-c1TAQQg", autoraise = False), #Tennyson first id seen
-            call("https://www.youtube.com/watch?v=lFzccuoS3ag", autoraise = False), #Tennyson
-            call("https://www.youtube.com/watch?v=QEJpZjg8GuA", autoraise = False), #Tech Connect first id seen
-            call("https://www.youtube.com/watch?v=HnMuNCl7tZ8", autoraise = False), #Tech Connect
-            call("https://www.youtube.com/watch?v=fq--H6KvqUg", autoraise = False), #doubt tech first id seen
-            call("https://www.youtube.com/watch?v=o5FQH7LxpU8", autoraise = False), #doubt tech
+            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ"), #RTV first id seen
+            call("https://www.youtube.com/watch?v=W2DdVFeq1WM"), #RTV
+            call("https://www.youtube.com/watch?v=T3d-c1TAQQg"), #Tennyson first id seen
+            call("https://www.youtube.com/watch?v=lFzccuoS3ag"), #Tennyson
+            call("https://www.youtube.com/watch?v=QEJpZjg8GuA"), #Tech Connect first id seen
+            call("https://www.youtube.com/watch?v=HnMuNCl7tZ8"), #Tech Connect
+            call("https://www.youtube.com/watch?v=fq--H6KvqUg"), #doubt tech first id seen
+            call("https://www.youtube.com/watch?v=o5FQH7LxpU8"), #doubt tech
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1564,9 +1564,9 @@ class ReleaseExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 3)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA", autoraise = False), #neon
-            call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc", autoraise = False), #tom
-            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0", autoraise = False), #buddha
+            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA"), #neon
+            call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc"), #tom
+            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"), #buddha
         ]
         #order doesn't really matter if every is loaded that's fine
         #and that implies that it got everything in the file
@@ -1611,9 +1611,9 @@ class ReleaseExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 3)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA", autoraise = False), #neon
-            call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc", autoraise = False), #tom
-            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0", autoraise = False), #buddha
+            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA"), #neon
+            call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc"), #tom
+            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"), #buddha
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1643,9 +1643,9 @@ class ReleaseExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 3)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA", autoraise = False), #neon
-            call("https://www.youtube.com/watch?v=vWw-lAQJuOk&list=OLAK5uy_lfpGH8uUFwOBDW7N7d1Mi9kbmavtBlz78", autoraise = False), #neon
-            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0", autoraise = False), #buddha
+            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA"), #neon
+            call("https://www.youtube.com/watch?v=vWw-lAQJuOk&list=OLAK5uy_lfpGH8uUFwOBDW7N7d1Mi9kbmavtBlz78"), #neon
+            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"), #buddha
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1672,12 +1672,12 @@ class ReleaseExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 6)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA", autoraise = False), #neon
-            call("https://www.youtube.com/watch?v=vWw-lAQJuOk&list=OLAK5uy_lfpGH8uUFwOBDW7N7d1Mi9kbmavtBlz78", autoraise = False), #neon
-            call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc", autoraise = False), #tom
-            call("https://www.youtube.com/watch?v=GFokXnCCMf8&list=OLAK5uy_mWLLO29YLEChiYDDDWfVAZKOwG4eIiqkM", autoraise = False), #tom
-            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0", autoraise = False), #buddha
-            call("https://www.youtube.com/watch?v=JKg20el5TMg&list=OLAK5uy_mAZrwhX-YJxcRIXNT1lrFB34sN5kiosXU", autoraise = False), #buddha
+            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA"), #neon
+            call("https://www.youtube.com/watch?v=vWw-lAQJuOk&list=OLAK5uy_lfpGH8uUFwOBDW7N7d1Mi9kbmavtBlz78"), #neon
+            call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc"), #tom
+            call("https://www.youtube.com/watch?v=GFokXnCCMf8&list=OLAK5uy_mWLLO29YLEChiYDDDWfVAZKOwG4eIiqkM"), #tom
+            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"), #buddha
+            call("https://www.youtube.com/watch?v=JKg20el5TMg&list=OLAK5uy_mAZrwhX-YJxcRIXNT1lrFB34sN5kiosXU"), #buddha
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1700,9 +1700,9 @@ class ReleaseExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 3)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA", autoraise = False), #neon
-            call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc", autoraise = False), #tom
-            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0", autoraise = False), #buddha
+            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA"), #neon
+            call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc"), #tom
+            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"), #buddha
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1732,11 +1732,11 @@ class ReleaseExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 5)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA", autoraise = False), #neon
-            call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc", autoraise = False), #tom
-            call("https://www.youtube.com/watch?v=GFokXnCCMf8&list=OLAK5uy_mWLLO29YLEChiYDDDWfVAZKOwG4eIiqkM", autoraise = False), #tom
-            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0", autoraise = False), #buddha
-            call("https://www.youtube.com/watch?v=JKg20el5TMg&list=OLAK5uy_mAZrwhX-YJxcRIXNT1lrFB34sN5kiosXU", autoraise = False), #buddha
+            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA"), #neon
+            call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc"), #tom
+            call("https://www.youtube.com/watch?v=GFokXnCCMf8&list=OLAK5uy_mWLLO29YLEChiYDDDWfVAZKOwG4eIiqkM"), #tom
+            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"), #buddha
+            call("https://www.youtube.com/watch?v=JKg20el5TMg&list=OLAK5uy_mAZrwhX-YJxcRIXNT1lrFB34sN5kiosXU"), #buddha
         ]
 
         self.mock_browser.assert_has_calls(call_list, any_order = True)
@@ -2000,14 +2000,14 @@ class BothExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 8)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ", autoraise = False), #rtv
-            call("https://www.youtube.com/watch?v=RzNkY1_Nk3o", autoraise = False), #mooose
-            call("https://www.youtube.com/watch?v=QEJpZjg8GuA", autoraise = False), #tech connect
-            call("https://www.youtube.com/watch?v=fq--H6KvqUg", autoraise = False), #doubt tech
-            call("https://www.youtube.com/watch?v=T3d-c1TAQQg", autoraise = False), #will tenny
-            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA", autoraise = False), #neon
-            call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc", autoraise = False), #tom
-            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0", autoraise = False), #buddha
+            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ"), #rtv
+            call("https://www.youtube.com/watch?v=RzNkY1_Nk3o"), #mooose
+            call("https://www.youtube.com/watch?v=QEJpZjg8GuA"), #tech connect
+            call("https://www.youtube.com/watch?v=fq--H6KvqUg"), #doubt tech
+            call("https://www.youtube.com/watch?v=T3d-c1TAQQg"), #will tenny
+            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA"), #neon
+            call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc"), #tom
+            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"), #buddha
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -2020,15 +2020,15 @@ class BothExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 9)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ", autoraise = False), #rtv
-            call("https://www.youtube.com/watch?v=W2DdVFeq1WM", autoraise = False), #rtv
-            call("https://www.youtube.com/watch?v=dyFCyOWq8PY", autoraise = False), #rtv
-            call("https://www.youtube.com/watch?v=3W0yMU06_pY", autoraise = False), #rtv
-            call("https://www.youtube.com/watch?v=wyf_za8nQDw", autoraise = False), #rtv
-            call("https://www.youtube.com/watch?v=QEJpZjg8GuA", autoraise = False), #tech connect
-            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA", autoraise = False), #neon
-            call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc", autoraise = False), #tom
-            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0", autoraise = False), #buddha
+            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ"), #rtv
+            call("https://www.youtube.com/watch?v=W2DdVFeq1WM"), #rtv
+            call("https://www.youtube.com/watch?v=dyFCyOWq8PY"), #rtv
+            call("https://www.youtube.com/watch?v=3W0yMU06_pY"), #rtv
+            call("https://www.youtube.com/watch?v=wyf_za8nQDw"), #rtv
+            call("https://www.youtube.com/watch?v=QEJpZjg8GuA"), #tech connect
+            call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA"), #neon
+            call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc"), #tom
+            call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"), #buddha
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()

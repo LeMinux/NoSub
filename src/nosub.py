@@ -296,7 +296,7 @@ def normalExec(files, time_frame: int, max_loads: int):
 def openPathWithBrowser(path: str):
     verboseprint(f"Loading URL {path}")
     try:
-        webbrowser.open_new_tab(path, autoraise = False)
+        webbrowser.open_new_tab(path)
     except Exception as e:
         print(e)
 
