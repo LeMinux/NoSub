@@ -430,7 +430,7 @@ def validateHandle(handle: str):
     if handle_len > constant_yt.HNDL_LEN or handle_len == 0:
         return False
 
-    white_list = r"^[a-zA-Z0-9-_]+$"
+    white_list = r"^[a-zA-Z0-9-_.]+$"
     if not re.fullmatch(white_list, handle):
         return False
 

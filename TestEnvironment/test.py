@@ -145,6 +145,10 @@ class ValidationMethods(unittest.TestCase):
         valid_handle = "TestGuy3"
         self.assertEqual(nosub.validateHandle(valid_handle), True)
 
+    def testValidateHandleWithADot(self):
+        valid_handle = "the.squid"
+        self.assertEqual(nosub.validateHandle(valid_handle), True)
+
     def testValidateAnInvalidHandle(self):
         invalid_handle = "IAmAReallyLongHandleThatCannotOccur"
         self.assertEqual(nosub.validateHandle(invalid_handle), False)
