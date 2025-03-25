@@ -187,7 +187,6 @@ def releaseExec(files, max_loads: int):
                         break
 
                     release_path = "https://www.youtube.com" + playlist_path
-                    verboseprint(f"Loading URL {playlist_path}")
                     releases_loaded = releases_loaded + 1
                     openPathWithBrowser(release_path)
 
@@ -237,7 +236,6 @@ def normalExec(files, time_frame: int, max_loads: int):
 
                     if converted_time < time_frame:
                         video_path = constant_yt.YT_BASE + first_id
-                        verboseprint(f"Loading URL {video_path}")
                         videos_loaded = videos_loaded + 1
                         openPathWithBrowser(video_path)
 
@@ -275,7 +273,6 @@ def normalExec(files, time_frame: int, max_loads: int):
                         break
 
                     video_path = constant_yt.YT_BASE + video_id
-                    verboseprint(f"Loading URL {video_path}")
                     videos_loaded = videos_loaded + 1
                     openPathWithBrowser(video_path)
 
