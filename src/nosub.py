@@ -17,8 +17,11 @@ exit_codes = Constant_Codes(EXIT_SUCCESS = 0, EXIT_FAILURE = 1)
 Constant_DB = namedtuple('_Constant_DB', ["V_TABLE", "R_TABLE"])
 db_tables = Constant_DB(V_TABLE = "KnownVideos", R_TABLE = "KnownReleases")
 
-Constant_YT = namedtuple('_Constant_YT', ["YT_BASE", "YTER_PAGE", "YT_VIDEOS", "YT_RELEASES", "YTER_LEN", "V_ID_LEN", "R_ID_LEN", "HNDL_LEN"])
-constant_yt = Constant_YT(YT_BASE = "https://www.youtube.com/watch?v=", YTER_PAGE = "https://www.youtube.com/@", YT_VIDEOS = "videos", YT_RELEASES = "releases", YTER_LEN = 25, V_ID_LEN = 11, R_ID_LEN = 41, HNDL_LEN = 30)
+Constant_YT = namedtuple('_Constant_YT', ["YT_BASE", "YTER_PAGE", "YT_VIDEOS", "YT_RELEASES", "YTER_LEN", "V_ID_LEN", "R_ID_LEN"])
+constant_yt = Constant_YT(YT_BASE = "https://www.youtube.com/watch?v=", YTER_PAGE = "https://www.youtube.com/@", YT_VIDEOS = "videos", YT_RELEASES = "releases", YTER_LEN = 25, V_ID_LEN = 11, R_ID_LEN = 41)
+
+Constant_Limits = namedtuple('_Constant_Max', ["VIDEO_URL_LENGTH", "RELEASE_URL_LENGTH", "HNDL_LENGTH_MAX"])
+constant_limits = Constant_Limits(VIDEO_URL_LENGTH = 43, RELEASE_URL_LENGTH = 90, HNDL_LENGTH_MAX = 30)
 
 Constant_Infs = namedtuple('_Constant_Infs', ["LOAD_TO_KNOWN","NO_LIMIT"])
 constant_infs = Constant_Infs(LOAD_TO_KNOWN = math.inf, NO_LIMIT = math.inf)
@@ -66,17 +69,13 @@ def main():
     #| check required |
     #|----------------|
 
-    if args.file is None:
-        print("Must specify what files to use", file = sys.stderr)
-        sys.exit(exit_codes.EXIT_FAILURE)
-    else:
-        valid = True
-        for file in args.file:
-            if checkFile(args.file[0]) is False:
-                valid = False
+    valid = True
+    for file in args.file:
+        if checkFile(file) is False:
+            valid = False
 
-        if not valid:
-            sys.exit(exit_codes.EXIT_FAILURE)
+    if not valid:
+        sys.exit(exit_codes.EXIT_FAILURE)
 
     #|----------------|
     #| check optional |
@@ -139,7 +138,7 @@ def main():
     #end of main
 
 def releaseExec(files, max_loads: int):
-    assert files, "Files given don't exists"
+    assert files, "Not given any files"
     assert max_loads > 0, f"Max loads is not usable {max_loads=}"
 
     global verboseprint
@@ -203,9 +202,9 @@ def releaseExec(files, max_loads: int):
 
 
 def normalExec(files, time_frame: int, max_loads: int):
-    assert files, "Files don't exists some how"
-    assert time_frame > 0, "Time frame is not usable"
-    assert max_loads > 0, "Max loads is not usable"
+    assert files, "Not given any files"
+    assert time_frame > 0, f"Time frame is not usable {time_frame=}"
+    assert max_loads > 0, f"Max loads is not usable {max_loads=}"
 
     global verboseprint
 
@@ -291,6 +290,8 @@ def normalExec(files, time_frame: int, max_loads: int):
                     sys.exit(exit_codes.EXIT_FAILURE)
 
 def openPathWithBrowser(path: str):
+    assert constant_yt.YT_BASE in path, f"Youtube URL trying to load doesn't contain the Youtube URL base {path=}"
+    assert len(path) == constant_limits.VIDEO_URL_LENGTH or len(path) == constant_limits.RELEASE_URL_LENGTH, f"Path trying to load doesn't match any expected length {path=} ({len(path)})"
     verboseprint(f"Loading URL {path}")
     try:
         webbrowser.open_new_tab(path)
@@ -299,6 +300,8 @@ def openPathWithBrowser(path: str):
 
 
 def checkFile(file):
+    assert file is not None, "Checking a None file"
+
     if not file or file.isspace():
         print("File given is just white space or empty", file = sys.stderr)
         return False
@@ -328,6 +331,9 @@ def checkFile(file):
 # this then compares the time of 1 year to 13 months
 # for now I will consider this user error
 def convertToMinutes(number_string, unit_string):
+    assert number_string is not None, "Attempting to convert None number string"
+    assert unit_string is not None, "Attempting to use a None unit string"
+
     if not number_string.isdigit():
         return -1
 
@@ -359,14 +365,14 @@ def convertToMinutes(number_string, unit_string):
 #loading from home (featured) will not have the same info
 #as loading directly into videos or releases
 def obtainElements(tab_wanted: str, handle: str):
+    assert handle is not None, "Can't obtain elements from a None handle"
     assert tab_wanted in (constant_yt.YT_VIDEOS, constant_yt.YT_RELEASES), f"Invalid tab given {tab_wanted}"
 
-    #don't need to bother loading an invalid handle
     if not validateHandle(handle):
         print(f"Handle given is not a valid handle {handle}")
         return None
 
-    #keep in mind even if the tab doesn't exist it will default to the home page
+    #keep in mind if the tab doesn't exist it will default to the home page
     page_to_load = constant_yt.YTER_PAGE + handle + "/" + tab_wanted
     response = requests.get(page_to_load)
 
@@ -421,10 +427,12 @@ def obtainElements(tab_wanted: str, handle: str):
     return tab_returned
 
 def validateHandle(handle: str):
+    assert handle is not None, "Passed None to validate handle"
+
     #a handle length of a single character can exist
     #messing around I found a channel with @e
     handle_len = len(handle)
-    if handle_len > constant_yt.HNDL_LEN or handle_len == 0:
+    if handle_len > constant_limits.HNDL_LENGTH_MAX or handle_len == 0:
         return False
 
     white_list = r"^[a-zA-Z0-9-_.]+$"
@@ -434,6 +442,8 @@ def validateHandle(handle: str):
     return True
 
 def validateVideoId(id: str):
+    assert id is not None, "Passed None to validate video id"
+
     if len(id) != constant_yt.V_ID_LEN:
         return False
 
@@ -444,6 +454,8 @@ def validateVideoId(id: str):
     return True
 
 def validateReleaseId(id: str):
+    assert id is not None, "Passed None to validate release id"
+
     if len(id) != constant_yt.R_ID_LEN:
         return False
 
@@ -456,6 +468,8 @@ def validateReleaseId(id: str):
 #This will abstract away if it's updating or adding a new handle
 #either way it's still adding the id
 def addId(handle:str, id: str, table: str):
+    assert id is not None, "Can't add a None id"
+    assert handle is not None, "Can't add a None handle"
     assert table in (db_tables.V_TABLE, db_tables.R_TABLE), f"Invalid table given {table}"
 
     global verbose
@@ -503,6 +517,8 @@ def addId(handle:str, id: str, table: str):
 #handle is needed to associate the id to something and have a reference
 #back to older ids to be removed
 def findId(handle: str, id: str, table: str):
+    assert id is not None, "Can't find a None id"
+    assert handle is not None, "Can't find a None handle"
     assert table in (db_tables.V_TABLE, db_tables.R_TABLE), f"Invalid table given {table}"
 
     search_query = f"SELECT COUNT(id) FROM {table} WHERE known_id = ? AND handle = ?;"
@@ -515,6 +531,7 @@ def findId(handle: str, id: str, table: str):
         return True
 
 def findHandle(handle: str, table: str):
+    assert handle is not None, "Can't find a None handle"
     assert table in (db_tables.V_TABLE, db_tables.R_TABLE), f"Invalid table given {table}"
 
     search_query = f"SELECT COUNT(id) FROM {table} WHERE handle = ?;"
@@ -531,13 +548,16 @@ def connectToDB():
     if not db_connection:
         db_connection = sqlite3.connect("knowns.db", isolation_level = None)
 
+    assert db_connection is not None, "Can't use DB connection is None"
     return db_connection
-    #test for if connection fails
 
 def closeConnection():
     global db_connection
     if db_connection:
         db_connection.close()
+        db_connection = None
+
+    assert db_connection is None, "Connection was not closed"
 
 def init():
     connection = connectToDB()
