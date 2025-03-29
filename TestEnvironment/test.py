@@ -891,6 +891,44 @@ class ClearDataBase(unittest.TestCase):
 
         self.assertEqual(ex.exception.code, 0)
 
+#Tests fail points that all execution branches would have
+#Nothing here should interact with the database and if it does it'll result in a crash
+class CommonExecutionFails(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.testing_connection = sqlite3.connect("CommonFails.db")
+
+    def setUp(self):
+        self.patcher_request = patch("requests.get", side_effect = self.mockObtainHtmls)
+        self.patcher_db_conn = patch("nosub.connectToDB", side_effect = self.mocked_connection)
+
+        self.patcher_request.start()
+        self.patcher_db_conn.start()
+
+    def tearDown(self):
+        self.patcher_request.stop()
+        self.patcher_db_conn.stop()
+
+    def mockObtainHtmls(self, *args, **kwargs):
+        raise Exception("Should not be trying to make request calls in common fail points class")
+
+    def mocked_connection(self):
+        if not self.testing_connection:
+            self.testing_connection = sqlite3.connect("CommonFails.db")
+
+        return self.testing_connection
+
+    def testFirstFileBadOtherGood(self):
+        with self.assertRaises(SystemExit):
+            sys.argv = ["nosub.py", "-f", "yepIAmNotReal.txt", "./TestFiles/ExecutionTesting/releases.txt"]
+            nosub.main()
+
+
+    def testFirstFileGoodOtherBad(self):
+        with self.assertRaises(SystemExit):
+            sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "yepIAmNotReal.txt"]
+            nosub.main()
 
 #Tests the actual execution of the program
 #Some things are mocked so that it can be done offline and with consistency
@@ -912,22 +950,22 @@ class NormalExecutionTesting(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.testing_connection = sqlite3.connect("NormalExecutionTesting.db")
-        cursor = cls.testing_connection.cursor()
+        #cursor = cls.testing_connection.cursor()
 
-        create_videos = """
-        CREATE TABLE IF NOT EXISTS KnownVideos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            handle varchar(30) UNIQUE NOT NULL,
-            known_id varchar(11) UNIQUE NOT NULL
-        );
-        """
+        #create_videos = """
+        #CREATE TABLE IF NOT EXISTS KnownVideos (
+        #    id INTEGER PRIMARY KEY AUTOINCREMENT,
+        #    handle varchar(30) UNIQUE NOT NULL,
+        #    known_id varchar(11) UNIQUE NOT NULL
+        #);
+        #"""
         #delete any existing data before adding new data
-        delete_videos = "DELETE FROM KnownVideos"
+        #delete_videos = "DELETE FROM KnownVideos"
 
-        cursor.execute(create_videos)
-        cursor.execute(delete_videos)
+        #cursor.execute(create_videos)
+        #cursor.execute(delete_videos)
 
-        cls.testing_connection.commit()
+        #cls.testing_connection.commit()
 
         file1 = open("./TestData/ExecutionHtmls/Long_Break_An0nymooose.html", "rb")
         file2 = open("./TestData/ExecutionHtmls/Many_Daily_Uploads_Romanian_Tvee.html", "rb")
@@ -1078,11 +1116,12 @@ class NormalExecutionTesting(unittest.TestCase):
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_video.txt", "-v"]
         #redirect output to a file
+        original_out = sys.stdout
         with open("verbose_test_videos.txt", "w") as verbose_test:
-            original_out = sys.stdout
             sys.stdout = verbose_test
             nosub.main()
-            sys.stdout = original_out
+
+        sys.stdout = original_out
 
 
         #read redirect file
@@ -1447,23 +1486,23 @@ class ReleaseExecutionTesting(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.testing_connection = sqlite3.connect("ReleaseExecutionTesting.db")
-        cursor = cls.testing_connection.cursor()
+        #cursor = cls.testing_connection.cursor()
 
-        create_releases = """
-        CREATE TABLE IF NOT EXISTS KnownReleases (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            handle varchar(30) UNIQUE NOT NULL,
-            known_id varchar(41) UNIQUE NOT NULL
-        );
-        """
+        #create_releases = """
+        #CREATE TABLE IF NOT EXISTS KnownReleases (
+        #    id INTEGER PRIMARY KEY AUTOINCREMENT,
+        #    handle varchar(30) UNIQUE NOT NULL,
+        #    known_id varchar(41) UNIQUE NOT NULL
+        #);
+        #"""
 
         #delete any existing data before adding new data
-        delete_releases = "DELETE FROM KnownReleases"
+        #delete_releases = "DELETE FROM KnownReleases"
 
-        cursor.execute(create_releases)
-        cursor.execute(delete_releases)
+        #cursor.execute(create_releases)
+        #cursor.execute(delete_releases)
 
-        cls.testing_connection.commit()
+        #cls.testing_connection.commit()
 
         file1 = open("./TestData/ExecutionHtmls/Neon_Nox_Releases.html", "rb")
         file2 = open("./TestData/ExecutionHtmls/Tom_Cardy_Releases.html", "rb")
@@ -1592,11 +1631,12 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_release.txt", "-v", "-r"]
         #redirect output to a file
+        original_out = sys.stdout
         with open("verbose_test_releases.txt", "w") as verbose_test:
-            original_out = sys.stdout
             sys.stdout = verbose_test
             nosub.main()
-            sys.stdout = original_out
+
+        sys.stdout = original_out
 
 
         #read redirect file
@@ -1797,35 +1837,35 @@ class BothExecutionTesting(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.testing_connection = sqlite3.connect("BothExecutionTesting.db")
-        cursor = cls.testing_connection.cursor()
+        #cursor = cls.testing_connection.cursor()
 
-        create_videos = """
-        CREATE TABLE IF NOT EXISTS KnownVideos (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            handle varchar(30) UNIQUE NOT NULL,
-            known_id varchar(11) UNIQUE NOT NULL
-        );
-        """
+        #create_videos = """
+        #CREATE TABLE IF NOT EXISTS KnownVideos (
+        #    id INTEGER PRIMARY KEY AUTOINCREMENT,
+        #    handle varchar(30) UNIQUE NOT NULL,
+        #    known_id varchar(11) UNIQUE NOT NULL
+        #);
+        #"""
 
-        create_releases = """
-        CREATE TABLE IF NOT EXISTS KnownReleases (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            handle varchar(30) UNIQUE NOT NULL,
-            known_id varchar(41) UNIQUE NOT NULL
-        );
-        """
+        #create_releases = """
+        #CREATE TABLE IF NOT EXISTS KnownReleases (
+        #    id INTEGER PRIMARY KEY AUTOINCREMENT,
+        #    handle varchar(30) UNIQUE NOT NULL,
+        #    known_id varchar(41) UNIQUE NOT NULL
+        #);
+        #"""
 
         #delete any existing data before adding new data
-        delete_videos = "DELETE FROM KnownVideos"
-        delete_releases = "DELETE FROM KnownReleases"
+        #delete_videos = "DELETE FROM KnownVideos"
+        #delete_releases = "DELETE FROM KnownReleases"
 
-        cursor.execute(create_videos)
-        cursor.execute(create_releases)
+        #cursor.execute(create_videos)
+        #cursor.execute(create_releases)
 
-        cursor.execute(delete_releases)
-        cursor.execute(delete_videos)
+        #cursor.execute(delete_releases)
+        #cursor.execute(delete_videos)
 
-        cls.testing_connection.commit()
+        #cls.testing_connection.commit()
 
         file1 = open("./TestData/ExecutionHtmls/Long_Break_An0nymooose.html", "rb")
         file2 = open("./TestData/ExecutionHtmls/Many_Daily_Uploads_Romanian_Tvee.html", "rb")
