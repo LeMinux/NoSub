@@ -477,7 +477,7 @@ class TestDataBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.testing_connection = nosub.ConnectionWrapper()
-        cls.testing_connection.connection = sqlite3.connect("Testing.db", isolation_level = None)
+        cls.testing_connection.connection = sqlite3.connect(":memory:", isolation_level = None)
 
         #seed database with consistent data
         cursor = cls.testing_connection.connection.cursor()
@@ -815,7 +815,7 @@ class ClearDataBase(unittest.TestCase):
     #create db needed for testing
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("DeleteTesting.db", isolation_level = None)
+        cls.testing_connection = sqlite3.connect(":memory:", isolation_level = None)
         cls.cursor = cls.testing_connection.cursor()
 
         create_videos = """
@@ -896,7 +896,7 @@ class CommonExecutionFails(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("CommonFails.db", isolation_level = None)
+        cls.testing_connection = sqlite3.connect(":memory:", isolation_level = None)
         cls.cursor = cls.testing_connection.cursor()
 
     def setUp(self):
@@ -949,7 +949,7 @@ class NormalExecutionTesting(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("NormalExecutionTesting.db", isolation_level = None)
+        cls.testing_connection = sqlite3.connect(":memory:", isolation_level = None)
         cls.cursor = cls.testing_connection.cursor()
 
         #create_videos = """
@@ -1484,8 +1484,8 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("ReleaseExecutionTesting.db", isolation_level = None)
-        cls.cursor = cls.testing_connection.cursor()
+        cls.testing_connection = sqlite3.connect(":memory:", isolation_level = None)
+        #cls.cursor = cls.testing_connection.cursor()
         #cursor = cls.testing_connection.connection.cursor()
 
         #create_releases = """
@@ -1536,7 +1536,6 @@ class ReleaseExecutionTesting(unittest.TestCase):
         self.patcher_request.start()
         self.patcher_db_conn.start()
         self.mock_browser = self.patcher_mock_browser.start()
-
         self.mock_browser.return_value = None
 
     def tearDown(self):
@@ -1573,13 +1572,13 @@ class ReleaseExecutionTesting(unittest.TestCase):
         #return self.testing_connection
 
     def clearDB(self):
-        #cursor = self.testing_connection.cursor()
-        self.cursor.execute("DELETE FROM KnownReleases")
+        cursor = self.testing_connection.cursor()
+        cursor.execute("DELETE FROM KnownReleases")
         self.testing_connection.commit()
 
     #despite any execution the most recent video should be in the db
     def verifyPostDB(self):
-        #cursor = self.testing_connection.cursor()
+        cursor = self.testing_connection.cursor()
         neon_handle = "NeonNox"
         tom_handle = "tomcardy1"
         buddha_handle = "BuddhaTrixie"
@@ -1589,15 +1588,15 @@ class ReleaseExecutionTesting(unittest.TestCase):
         new_buddha_id = "OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"
 
         with self.subTest(msg = f"Testing handle {neon_handle} is set to have id {new_neon_id}"):
-            result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{new_neon_id}' AND handle = '{neon_handle}';")
+            result = cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{new_neon_id}' AND handle = '{neon_handle}';")
             self.assertEqual(result.fetchone()[0], 1)
 
         with self.subTest(msg = f"Testing handle {tom_handle} is set to have id {new_tom_id}"):
-            result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{new_tom_id}' AND handle = '{tom_handle}';")
+            result = cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{new_tom_id}' AND handle = '{tom_handle}';")
             self.assertEqual(result.fetchone()[0], 1)
 
         with self.subTest(msg = f"Testing handle {buddha_handle} is set to have id {new_buddha_id}"):
-            result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{new_buddha_id}' AND handle = '{buddha_handle}';")
+            result = cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{new_buddha_id}' AND handle = '{buddha_handle}';")
             self.assertEqual(result.fetchone()[0], 1)
 
     def testReleaseFromFreshStartWithDefaultSettings(self):
@@ -1621,13 +1620,13 @@ class ReleaseExecutionTesting(unittest.TestCase):
     #this doesn't really care if the program runs correctly but that verbosity is printed
     def testReleaseVerbose(self):
         self.clearDB()
-        #cursor = self.testing_connection.connection.cursor()
+        cursor = self.testing_connection.connection.cursor()
         add_videos = """
             INSERT INTO KnownReleases (handle, known_id) VALUES
             ('NeonNox', 'OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA')
         """
-        self.cursor.execute(add_videos)
-        self.testing_connection.connection.commit()
+        cursor.execute(add_videos)
+        self.testing_connection.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_release.txt", "-v", "-r"]
         #redirect output to a file
@@ -1637,7 +1636,6 @@ class ReleaseExecutionTesting(unittest.TestCase):
             nosub.main()
 
         sys.stdout = original_out
-
 
         #read redirect file
         contents = ""
@@ -1667,7 +1665,7 @@ class ReleaseExecutionTesting(unittest.TestCase):
     #handle not known yet Buddha Trixie
     def testReleaseWithSomeDataInDatabaseDefaultSettings(self):
         self.clearDB()
-        cursor = self.testing_connection.connection.cursor()
+        cursor = self.testing_connection.cursor()
         #tom cardy as no new content
         #neon nox as a streak of new releases
         #buddha trixies as new handle seen
@@ -1705,7 +1703,7 @@ class ReleaseExecutionTesting(unittest.TestCase):
             ('BuddhaTrixie', 'OLAK5uy_lXGNChVf0HPaiNVZ9Ce6pD7aDvkn4gqIk')
         """
         cursor.execute(add_releases)
-        self.testing_connection.connection.commit()
+        self.testing_connection.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-r"]
         nosub.main()
@@ -1800,8 +1798,8 @@ class ReleaseExecutionTesting(unittest.TestCase):
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/newlines.txt", "-r"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 0)
-        #cursor = self.testing_connection.connection.cursor()
-        self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
+        cursor = self.testing_connection.connection.cursor()
+        cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
     def testReleaseWithEmptyFile(self):
@@ -1809,8 +1807,8 @@ class ReleaseExecutionTesting(unittest.TestCase):
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/empty.txt", "-r"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 0)
-        #cursor = self.testing_connection.connection.cursor()
-        self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
+        cursor = self.testing_connection.connection.cursor()
+        cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
     #the /usr/bin/sh does have read permission for everyone
@@ -1820,8 +1818,8 @@ class ReleaseExecutionTesting(unittest.TestCase):
         with self.assertRaises(UnicodeDecodeError):
             nosub.main()
 
-        #cursor = self.testing_connection.connection.cursor()
-        self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
+        cursor = self.testing_connection.connection.cursor()
+        cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
 #since both execution is just calling normalExec and releaseExec
@@ -1836,7 +1834,7 @@ class BothExecutionTesting(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("BothExecutionTesting.db", isolation_level = None)
+        cls.testing_connection = sqlite3.connect(":memory:", isolation_level = None)
         cls.cursor = cls.testing_connection.cursor()
         #cursor = cls.testing_connection.connection.cursor()
 
