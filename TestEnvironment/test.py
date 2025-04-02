@@ -896,7 +896,7 @@ class CommonExecutionFails(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect(":memory:", isolation_level = None)
+        cls.testing_connection = sqlite3.connect("CommonFails.db", isolation_level = None)
         cls.cursor = cls.testing_connection.cursor()
 
     def setUp(self):
@@ -949,7 +949,7 @@ class NormalExecutionTesting(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect(":memory:", isolation_level = None)
+        cls.testing_connection = sqlite3.connect("NormalExecutionTesting.db", isolation_level = None)
         cls.cursor = cls.testing_connection.cursor()
 
         #create_videos = """
@@ -1484,7 +1484,7 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect(":memory:", isolation_level = None)
+        cls.testing_connection = sqlite3.connect("ReleaseExecutionTesting.db", isolation_level = None)
         #cls.cursor = cls.testing_connection.cursor()
         #cursor = cls.testing_connection.connection.cursor()
 
@@ -1834,7 +1834,7 @@ class BothExecutionTesting(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect(":memory:", isolation_level = None)
+        cls.testing_connection = sqlite3.connect("BothExecutionTesting.db", isolation_level = None)
         cls.cursor = cls.testing_connection.cursor()
         #cursor = cls.testing_connection.connection.cursor()
 
