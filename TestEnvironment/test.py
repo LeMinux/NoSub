@@ -476,7 +476,7 @@ class TestDataBase(unittest.TestCase):
     #create db needed for testing
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("Testing.db")
+        cls.testing_connection = sqlite3.connect("Testing.db", isolation_level = None)
 
         #seed database with consistent data
         cursor = cls.testing_connection.cursor()
@@ -531,16 +531,16 @@ class TestDataBase(unittest.TestCase):
         #can be inspected before starting new tests
 
     def setUp(self):
-        self.patcher_db_conn = patch("nosub.connectToDB", side_effect = self.mocked_connection)
+        self.patcher_db_conn = patch("sqlite3.connect", side_effect = self.mocked_connection)
         self.mock_connection = self.patcher_db_conn.start()
         self.cursor = self.testing_connection.cursor()
 
     def tearDown(self):
         self.patcher_db_conn.stop()
 
-    def mocked_connection(self):
-        if not self.testing_connection:
-            self.testing_connection = sqlite3.connect("Testing.db")
+    def mocked_connection(self, *args, **kwargs):
+        #if not self.testing_connection:
+        #    self.testing_connection = sqlite3.connect("Testing.db")
 
         return self.testing_connection
 
@@ -814,7 +814,7 @@ class ClearDataBase(unittest.TestCase):
     #create db needed for testing
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("DeleteTesting.db")
+        cls.testing_connection = sqlite3.connect("DeleteTesting.db", isolation_level = None)
 
         #seed database with consistent data
         cursor = cls.testing_connection.cursor()
@@ -866,15 +866,15 @@ class ClearDataBase(unittest.TestCase):
         cls.testing_connection.close()
 
     def setUp(self):
-        self.patcher_db_conn = patch("nosub.connectToDB", side_effect = self.mocked_connection)
+        self.patcher_db_conn = patch("sqlite3.connect", side_effect = self.mocked_connection)
         self.mock_connection = self.patcher_db_conn.start()
 
     def tearDown(self):
         self.patcher_db_conn.stop()
 
-    def mocked_connection(self):
-        if not self.testing_connection:
-            self.testing_connection = sqlite3.connect("DeleteTesting.db")
+    def mocked_connection(self, *args, **kwargs):
+        #if not self.testing_connection:
+        #    self.testing_connection = sqlite3.connect("DeleteTesting.db")
 
         return self.testing_connection
 
@@ -897,11 +897,11 @@ class CommonExecutionFails(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("CommonFails.db")
+        cls.testing_connection = sqlite3.connect("CommonFails.db", isolation_level = None)
 
     def setUp(self):
         self.patcher_request = patch("requests.get", side_effect = self.mockObtainHtmls)
-        self.patcher_db_conn = patch("nosub.connectToDB", side_effect = self.mocked_connection)
+        self.patcher_db_conn = patch("sqlite3.connect", side_effect = self.mocked_connection)
 
         self.patcher_request.start()
         self.patcher_db_conn.start()
@@ -913,9 +913,9 @@ class CommonExecutionFails(unittest.TestCase):
     def mockObtainHtmls(self, *args, **kwargs):
         raise Exception("Should not be trying to make request calls in common fail points class")
 
-    def mocked_connection(self):
-        if not self.testing_connection:
-            self.testing_connection = sqlite3.connect("CommonFails.db")
+    def mocked_connection(self, *args, **kwargs):
+        #if not self.testing_connection:
+        #    self.testing_connection = sqlite3.connect("CommonFails.db")
 
         return self.testing_connection
 
@@ -949,7 +949,7 @@ class NormalExecutionTesting(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("NormalExecutionTesting.db")
+        cls.testing_connection = sqlite3.connect("NormalExecutionTesting.db", isolation_level = None)
         #cursor = cls.testing_connection.cursor()
 
         #create_videos = """
@@ -994,7 +994,7 @@ class NormalExecutionTesting(unittest.TestCase):
 
     def setUp(self):
         self.patcher_request = patch("requests.get", side_effect = self.mockObtainHtmls)
-        self.patcher_db_conn = patch("nosub.connectToDB", side_effect = self.mocked_connection)
+        self.patcher_db_conn = patch("sqlite3.connect", side_effect = self.mocked_connection)
         self.patcher_mock_browser = patch("webbrowser.open_new_tab")
 
         self.patcher_request.start()
@@ -1038,9 +1038,9 @@ class NormalExecutionTesting(unittest.TestCase):
 
         return response
 
-    def mocked_connection(self):
-        if not self.testing_connection:
-            self.testing_connection = sqlite3.connect("ExecutionTesting.db")
+    def mocked_connection(self, *args, **kwargs):
+        #if not self.testing_connection:
+        #    self.testing_connection = sqlite3.connect("ExecutionTesting.db")
 
         return self.testing_connection
 
@@ -1122,7 +1122,6 @@ class NormalExecutionTesting(unittest.TestCase):
             nosub.main()
 
         sys.stdout = original_out
-
 
         #read redirect file
         contents = ""
@@ -1485,7 +1484,7 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("ReleaseExecutionTesting.db")
+        cls.testing_connection = sqlite3.connect("ReleaseExecutionTesting.db", isolation_level = None)
         #cursor = cls.testing_connection.cursor()
 
         #create_releases = """
@@ -1530,7 +1529,7 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     def setUp(self):
         self.patcher_request = patch("requests.get", side_effect = self.mockObtainHtmls)
-        self.patcher_db_conn = patch("nosub.connectToDB", side_effect = self.mocked_connection)
+        self.patcher_db_conn = patch("sqlite3.connect", side_effect = self.mocked_connection)
         self.patcher_mock_browser = patch("webbrowser.open_new_tab")
 
         self.patcher_request.start()
@@ -1566,9 +1565,9 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
         return response
 
-    def mocked_connection(self):
-        if not self.testing_connection:
-            self.testing_connection = sqlite3.connect("ReleaseExecutionTesting.db")
+    def mocked_connection(self, *args, **kwargs):
+        #if not self.testing_connection:
+        #    self.testing_connection = sqlite3.connect("ReleaseExecutionTesting.db")
 
         return self.testing_connection
 
@@ -1836,7 +1835,7 @@ class BothExecutionTesting(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("BothExecutionTesting.db")
+        cls.testing_connection = sqlite3.connect("BothExecutionTesting.db", isolation_level = None)
         #cursor = cls.testing_connection.cursor()
 
         #create_videos = """
@@ -1880,7 +1879,7 @@ class BothExecutionTesting(unittest.TestCase):
         file11 = open("./TestData/ExecutionHtmls/home_page.html", "rb")
         #note that this home page is not associated with any of the youtubers
         #it doesn't really matter as you can not extract video or release information
-        #from the home page so the program should detect this
+        #from the home page
 
         cls.anonymooose = file1.read()
         cls.romanian_tvee = file2.read()
@@ -1912,7 +1911,7 @@ class BothExecutionTesting(unittest.TestCase):
 
     def setUp(self):
         self.patcher_request = patch("requests.get", side_effect = self.mockObtainHtmls)
-        self.patcher_db_conn = patch("nosub.connectToDB", side_effect = self.mocked_connection)
+        self.patcher_db_conn = patch("sqlite3.connect", side_effect = self.mocked_connection)
         self.patcher_mock_browser = patch("webbrowser.open_new_tab")
 
         self.patcher_request.start()
@@ -1973,9 +1972,9 @@ class BothExecutionTesting(unittest.TestCase):
 
         return response
 
-    def mocked_connection(self):
-        if not self.testing_connection:
-            self.testing_connection = sqlite3.connect("BothExecutionTesting.db")
+    def mocked_connection(self, *args, **kwargs):
+        #if not self.testing_connection:
+        #    self.testing_connection = sqlite3.connect("BothExecutionTesting.db")
 
         return self.testing_connection
 

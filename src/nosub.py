@@ -27,7 +27,14 @@ Constant_Infs = namedtuple('_Constant_Infs', ["LOAD_TO_KNOWN","NO_LIMIT"])
 constant_infs = Constant_Infs(LOAD_TO_KNOWN = math.inf, NO_LIMIT = math.inf)
 
 verboseprint = None
-db_connection = None
+
+#wrapper class to allow a connection to be passed by reference
+#per basis so that the connection isn't global.
+#It's more clean than having the connection in a list to force
+#it to be mutable. I mean this is still forcing it to be mutable, but is more "clean"
+class ConnectionWrapper:
+    def __init__(self, connection=None):
+        self.connection = connection
 
 def main():
     global verboseprint
@@ -115,12 +122,14 @@ def main():
     verboseprint = print if args.verbose else lambda *a, **k: None
 
     if args.clear_knowns:
-        connection = connectToDB()
-        cursor = connection.cursor()
+        #connection = connectToDB()
+        conn_wrapped = ConnectionWrapper()
+        connectToDB(conn_wrapped)
+        cursor = conn_wrapped.connection.cursor()
         cursor.execute("DELETE FROM KnownVideos")
         cursor.execute("DELETE FROM KnownReleases")
-        connection.commit()
-        closeConnection()
+        conn_wrapped.connection.commit()
+        closeConnection(conn_wrapped)
         print("Cleared database")
         sys.exit(exit_codes.EXIT_SUCCESS)
 
@@ -134,7 +143,7 @@ def main():
     else:
         releaseExec(args.file, max_loads)
 
-    closeConnection()
+    #closeConnection()
     #end of main
 
 def releaseExec(files, max_loads: int):
@@ -143,6 +152,8 @@ def releaseExec(files, max_loads: int):
 
     global verboseprint
 
+    conn_wrapped = ConnectionWrapper()
+    connectToDB(conn_wrapped)
     for file_name in files:
         with open(file_name, encoding = "ascii") as open_file:
             for raw_handle in open_file:
@@ -157,9 +168,9 @@ def releaseExec(files, max_loads: int):
                 first_id = releases[0]["richItemRenderer"]["content"]["playlistRenderer"]["playlistId"]
 
                 #if the handle has not been added then there is no known stopping point
-                if not findHandle(handle, db_tables.R_TABLE):
-                    if addId(handle, first_id, db_tables.R_TABLE) != 0:
-                        closeConnection()
+                if not findHandle(handle, db_tables.R_TABLE, conn_wrapped):
+                    if addID(handle, first_id, db_tables.R_TABLE, conn_wrapped) != 0:
+                        closeConnection(conn_wrapped)
                         print("Terminating program due to malformed data", file = sys.stderr)
                         sys.exit(exit_codes.EXIT_FAILURE)
 
@@ -182,7 +193,7 @@ def releaseExec(files, max_loads: int):
                         #go to next url
                         break
 
-                    if findId(handle, playlist_id, db_tables.R_TABLE):
+                    if findID(handle, playlist_id, db_tables.R_TABLE, conn_wrapped):
                         break
 
                     release_path = "https://www.youtube.com" + playlist_path
@@ -195,10 +206,12 @@ def releaseExec(files, max_loads: int):
                 #No new releases
                 if releases_loaded == 0:
                     verboseprint(f"No new releases for channel {handle}")
-                elif releases_loaded > 0 and addId(handle, first_id, db_tables.R_TABLE) != 0:
-                    closeConnection()
+                elif releases_loaded > 0 and addID(handle, first_id, db_tables.R_TABLE, conn_wrapped) != 0:
+                    closeConnection(conn_wrapped)
                     print("Terminating program due to malformed data", file = sys.stderr)
                     sys.exit(exit_codes.EXIT_FAILURE)
+    #end of big for loop
+    closeConnection(conn_wrapped)
 
 
 def normalExec(files, time_frame: int, max_loads: int):
@@ -208,6 +221,8 @@ def normalExec(files, time_frame: int, max_loads: int):
 
     global verboseprint
 
+    conn_wrapped = ConnectionWrapper()
+    connectToDB(conn_wrapped)
     for file_name in files:
         with open(file_name, encoding = "ascii") as open_file:
             for raw_handle in open_file:
@@ -223,10 +238,10 @@ def normalExec(files, time_frame: int, max_loads: int):
                 offset = 0
                 videos_loaded = 0
 
-                if not findHandle(handle, db_tables.V_TABLE):
+                if not findHandle(handle, db_tables.V_TABLE, conn_wrapped):
                     #if the handle has not been added then there is no known stopping point
-                    if addId(handle, first_id, db_tables.V_TABLE) != 0:
-                        closeConnection()
+                    if addID(handle, first_id, db_tables.V_TABLE, conn_wrapped) != 0:
+                        closeConnection(conn_wrapped)
                         print("Terminating program due to malformed data", file = sys.stderr)
                         sys.exit(exit_codes.EXIT_FAILURE)
 
@@ -263,7 +278,7 @@ def normalExec(files, time_frame: int, max_loads: int):
                         #go to next url
                         break
 
-                    if findId(handle, video_id, db_tables.V_TABLE):
+                    if findID(handle, video_id, db_tables.V_TABLE, conn_wrapped):
                         break
 
                     #then check the time as a new video could have an id
@@ -284,10 +299,12 @@ def normalExec(files, time_frame: int, max_loads: int):
                     verboseprint(f"Youtube channel {handle} has not uploaded in {time_phrase[0]} {time_phrase[1]}")
 
                 #add first id to db
-                elif addId(handle, first_id, db_tables.V_TABLE) != 0:
-                    closeConnection()
+                elif addID(handle, first_id, db_tables.V_TABLE, conn_wrapped) != 0:
+                    closeConnection(conn_wrapped)
                     print("Terminating program due to malformed data", file = sys.stderr)
                     sys.exit(exit_codes.EXIT_FAILURE)
+    #end of big for loop
+    closeConnection(conn_wrapped)
 
 def openPathWithBrowser(path: str):
     assert constant_yt.YT_BASE in path, f"Youtube URL trying to load doesn't contain the Youtube URL base {path=}"
@@ -323,6 +340,7 @@ def checkFile(file):
     if not os.access(file_path, os.R_OK):
         print(f"File \"{file}\" does not have read permissions", file = sys.stderr)
         return  False
+
 
     return True
 
@@ -467,12 +485,12 @@ def validateReleaseId(id: str):
 
 #This will abstract away if it's updating or adding a new handle
 #either way it's still adding the id
-def addId(handle:str, id: str, table: str):
+def addID(handle:str, id: str, table: str, conn_wrapper: ConnectionWrapper):
     assert id is not None, "Can't add a None id"
     assert handle is not None, "Can't add a None handle"
     assert table in (db_tables.V_TABLE, db_tables.R_TABLE), f"Invalid table given {table}"
+    assert isinstance(conn_wrapper, ConnectionWrapper), "Not using the connection wrapper for adding an ID"
 
-    global verbose
     #with the usage of parameterized queries sanitization is not necessary
     #but validation is necessary to prevent garbage data in.
     #If garbage data is entered then that garbage can't be found with expected data
@@ -490,8 +508,8 @@ def addId(handle:str, id: str, table: str):
             return -1
 
     count_handle = f"SELECT COUNT(id) FROM {table} WHERE handle = ?;"
-    connection = connectToDB()
-    cursor = connection.cursor()
+    #connection = connectToDB()
+    cursor = conn_wrapper.connect.cursor()
     result = (cursor.execute(count_handle, (handle,))).fetchone()[0]
     #add entry if it doesn't exist otherwise update it
     #if it fails to add there is no need to rollback as the single statement failed
@@ -510,59 +528,64 @@ def addId(handle:str, id: str, table: str):
             print(e)
             sys.exit(exit_codes.EXIT_FAILURE)
 
-    connection.commit()
+    conn_wrapper.connection.commit()
 
     return 0
 
 #handle is needed to associate the id to something and have a reference
 #back to older ids to be removed
-def findId(handle: str, id: str, table: str):
+def findID(handle: str, id: str, table: str, conn_wrapper: ConnectionWrapper):
     assert id is not None, "Can't find a None id"
     assert handle is not None, "Can't find a None handle"
     assert table in (db_tables.V_TABLE, db_tables.R_TABLE), f"Invalid table given {table}"
+    assert isinstance(conn_wrapper, ConnectionWrapper), "Not using the connection wrapper for finding an ID"
 
     search_query = f"SELECT COUNT(id) FROM {table} WHERE known_id = ? AND handle = ?;"
-    connection = connectToDB()
-    cursor = connection.cursor()
+    #connection = connectToDB()
+    cursor = conn_wrapper.connection.cursor()
     result = (cursor.execute(search_query, (id, handle))).fetchone()[0]
     if result == 0:
         return False
     else:
         return True
 
-def findHandle(handle: str, table: str):
+def findHandle(handle: str, table: str, conn_wrapper: ConnectionWrapper):
     assert handle is not None, "Can't find a None handle"
     assert table in (db_tables.V_TABLE, db_tables.R_TABLE), f"Invalid table given {table}"
+    assert isinstance(conn_wrapper, ConnectionWrapper), "Not using the connection wrapper for finding a handle"
 
     search_query = f"SELECT COUNT(id) FROM {table} WHERE handle = ?;"
-    connection = connectToDB()
-    cursor = connection.cursor()
+    #connection = connectToDB()
+    cursor = conn_wrapper.connection.cursor()
     result = (cursor.execute(search_query, (handle,))).fetchone()[0]
     if result == 0:
         return False
     else:
         return True
 
-def connectToDB():
-    global db_connection
-    if not db_connection:
-        db_connection = sqlite3.connect("knowns.db", isolation_level = None)
+def connectToDB(conn_object: ConnectionWrapper):
+    assert isinstance(conn_object, ConnectionWrapper), "Tried to make a connection without the wrapper"
 
-    assert db_connection is not None, "Can't use DB connection is None"
-    return db_connection
+    if conn_object.connection is None:
+        conn_object.connection = sqlite3.connect("knowns.db", isolation_level = None)
 
-def closeConnection():
-    global db_connection
-    if db_connection:
-        db_connection.close()
-        db_connection = None
+    assert conn_object.connection is not None, "Can't use DB connection for it is None"
 
-    assert db_connection is None, "Connection was not closed"
+def closeConnection(conn_object: ConnectionWrapper):
+    assert isinstance(conn_object, ConnectionWrapper), "Tried to close a connection without the wrapper"
+
+    if conn_object:
+        conn_object.connection.close()
+        conn_object.connection = None
+
+    assert conn_object.connection is None, "Connection was not closed"
 
 def init():
-    connection = connectToDB()
+    #connection = connectToDB()
+    conn_wrapped = ConnectionWrapper()
+    connectToDB(conn_wrapped)
     try:
-        cursor = connection.cursor()
+        cursor = conn_wrapped.connection.cursor()
         #auto increment is used since string primary keys are a little bit
         #slower. For the videos table it isn't as bad, but the releases one
         #the unique id is 41 characters. Re-indexing would
@@ -583,7 +606,8 @@ def init():
         """
         cursor.execute(create_videos)
         cursor.execute(create_releases)
-        connection.commit()
+        conn_wrapped.connection.commit()
+        closeConnection(conn_wrapped)
     except sqlite3.Error as error:
         print(error)
         return -1
