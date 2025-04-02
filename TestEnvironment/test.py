@@ -550,46 +550,46 @@ class TestDataBase(unittest.TestCase):
     def testAddingNewHandleAndVideo(self):
         valid_handle = "TestGuy1"
         valid_video_id = "AB7pBrudFbg"
-        self.assertEqual(nosub.addId(valid_handle, valid_video_id, self.videos_table), 0)
+        self.assertEqual(nosub.addID(valid_handle, valid_video_id, self.videos_table), 0)
         result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.videos_table} WHERE {self.id_field} = '{valid_video_id}' AND handle = '{valid_handle}';")
         self.assertEqual(result.fetchone()[0], 1)
 
     def testAddingNewHandleAndReleaseId(self):
         valid_handle = "TestGuy1"
         valid_release_id = "OLAK5uy_mqUpJnm37KuCU0D5kF4SdvqTkK0WGIdWg"
-        self.assertEqual(nosub.addId(valid_handle, valid_release_id, self.releases_table), 0)
+        self.assertEqual(nosub.addID(valid_handle, valid_release_id, self.releases_table), 0)
         result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{valid_release_id}' AND handle = '{valid_handle}';")
         self.assertEqual(result.fetchone()[0], 1)
 
     def testAddingAHandleThatIsInvalid(self):
         invalid_handle = "IAmAReallyLongHandleThatCannotOccur"
         valid_release_id = "OLAK5uy_mqUpJnm37KuCU0D5kF4SdvqTkK0WGIdWg"
-        self.assertEqual(nosub.addId(invalid_handle, valid_release_id, self.releases_table), -1)
+        self.assertEqual(nosub.addID(invalid_handle, valid_release_id, self.releases_table), -1)
 
     def testAddingVideoIdThatHasInvalidCharacters(self):
         valid_handle = "TestGuy6"
         invalid_video_id3 = "8^![l]|e783"
-        self.assertEqual(nosub.addId(valid_handle, invalid_video_id3, self.videos_table), -1)
+        self.assertEqual(nosub.addID(valid_handle, invalid_video_id3, self.videos_table), -1)
 
     def testAddingReleaseIdThatHasInvalidCharacters(self):
         valid_handle = "TestGuy6"
         invalid_release_id2 = "OLAK5uy_m!U'Jnm37KuCU0D;kF4SdvqT K0WGIdWw"
-        self.assertEqual(nosub.addId(valid_handle, invalid_release_id2, self.releases_table), -1)
+        self.assertEqual(nosub.addID(valid_handle, invalid_release_id2, self.releases_table), -1)
 
     def testAddingEmptyHandle(self):
         empty = ""
         valid_video_id = "AB7pBrudFbg"
-        self.assertEqual(nosub.addId(empty, valid_video_id, self.videos_table), -1)
+        self.assertEqual(nosub.addID(empty, valid_video_id, self.videos_table), -1)
 
     def testAddingEmptyVideoId(self):
         valid_handle = "TestGuy7"
         empty = ""
-        self.assertEqual(nosub.addId(valid_handle, empty, self.videos_table), -1)
+        self.assertEqual(nosub.addID(valid_handle, empty, self.videos_table), -1)
 
     def testAddingEmptyReleaseId(self):
         valid_handle = "TestGuy7"
         empty = ""
-        self.assertEqual(nosub.addId(valid_handle, empty, self.releases_table), -1)
+        self.assertEqual(nosub.addID(valid_handle, empty, self.releases_table), -1)
 
     #|----------|
     #| Updating |
@@ -598,41 +598,41 @@ class TestDataBase(unittest.TestCase):
     def testUpdatingWithVideoId(self):
         video_handle = "smartereveryday"
         update_video = "lylCYkgC63Q"
-        self.assertEqual(nosub.addId(video_handle, update_video, self.videos_table), 0)
+        self.assertEqual(nosub.addID(video_handle, update_video, self.videos_table), 0)
         result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.videos_table} WHERE {self.id_field} = '{update_video}' AND handle = '{video_handle}';")
         self.assertEqual(result.fetchone()[0], 1)
 
     def testUpdatingWithReleaseId(self):
         release_handle = "NeonNox"
         update_release = "OLAK5uy_mQYefdFy2Kk8UPkdiJA6gnOvu3wfFATHU"
-        self.assertEqual(nosub.addId(release_handle, update_release, self.releases_table), 0)
+        self.assertEqual(nosub.addID(release_handle, update_release, self.releases_table), 0)
         result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{update_release}' AND handle = '{release_handle}';")
         self.assertEqual(result.fetchone()[0], 1)
 
     def testUpdatingWithAnInvalidVideoId(self):
         video_handle = "smartereveryday"
         invalid_update_video = "8^![l]|e783"
-        self.assertEqual(nosub.addId(video_handle, invalid_update_video, self.videos_table), -1)
+        self.assertEqual(nosub.addID(video_handle, invalid_update_video, self.videos_table), -1)
 
     def testUpdatingWithAnInvalidReleaseId(self):
         release_handle = "NeonNox"
         invalid_update_release = "OLAK5uy_m!U'Jnm37KuCU0D;kF4SdvqT K0WGIdWw"
-        self.assertEqual(nosub.addId(release_handle, invalid_update_release, self.releases_table), -1)
+        self.assertEqual(nosub.addID(release_handle, invalid_update_release, self.releases_table), -1)
 
     def testUpdatingUsingAnEmptyHandle(self):
         empty = ""
         update_video = "lylCYkgC63Q"
-        self.assertEqual(nosub.addId(empty, update_video, self.videos_table), -1)
+        self.assertEqual(nosub.addID(empty, update_video, self.videos_table), -1)
 
     def testUpdatingUpdatingUsingAnEmptyVideoId(self):
         video_handle = "smartereveryday"
         empty = ""
-        self.assertEqual(nosub.addId(video_handle, empty, self.videos_table), -1)
+        self.assertEqual(nosub.addID(video_handle, empty, self.videos_table), -1)
 
     def testUpdatingUpdatingUsingAnEmptyReleaseId(self):
         release_handle = "NeonNox"
         empty = ""
-        self.assertEqual(nosub.addId(release_handle, empty, self.releases_table), -1)
+        self.assertEqual(nosub.addID(release_handle, empty, self.releases_table), -1)
 
     #|---------|
     #| Finding |
@@ -641,42 +641,42 @@ class TestDataBase(unittest.TestCase):
     def testFindingValidHandleAndVideoId(self):
         video_handle = "veritasium"
         find_video_id = "P_fHJIYENdI"
-        self.assertEqual(nosub.findId(video_handle, find_video_id, self.videos_table), True)
+        self.assertEqual(nosub.findID(video_handle, find_video_id, self.videos_table), True)
 
     def testFindingValidHandleAndReleaseId(self):
         release_handle = "BuddhaTrixie"
         find_release_id = "OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"
-        self.assertEqual(nosub.findId(release_handle, find_release_id, self.releases_table), True)
+        self.assertEqual(nosub.findID(release_handle, find_release_id, self.releases_table), True)
 
     def testFindingInvalidHandleButValidVideoId(self):
         handle_not_in_db = "HeHeHeHa"
         find_video_id = "P_fHJIYENdI"
-        self.assertEqual(nosub.findId(handle_not_in_db, find_video_id, self.videos_table), False)
+        self.assertEqual(nosub.findID(handle_not_in_db, find_video_id, self.videos_table), False)
 
     def testFindingInvalidHandleButValidReleaseId(self):
         handle_not_in_db = "HeHeHeHa"
         find_release_id = "OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"
-        self.assertEqual(nosub.findId(handle_not_in_db, find_release_id, self.releases_table), False)
+        self.assertEqual(nosub.findID(handle_not_in_db, find_release_id, self.releases_table), False)
 
     def testFindingValidHandleButInvalidVideoId(self):
         video_handle = "veritasium"
         video_id_not_in_db = "7md_gd3HuMQ"
-        self.assertEqual(nosub.findId(video_handle, video_id_not_in_db, self.videos_table), False)
+        self.assertEqual(nosub.findID(video_handle, video_id_not_in_db, self.videos_table), False)
 
     def testFindingValidHandleButInvalidReleaseId(self):
         release_handle = "BuddhaTrixie"
         release_id_not_in_db = "OLAK5uy_ncH3yFRhelTJAfdpWp4CigIDPGnjihZvs"
-        self.assertEqual(nosub.findId(release_handle, release_id_not_in_db, self.videos_table), False)
+        self.assertEqual(nosub.findID(release_handle, release_id_not_in_db, self.videos_table), False)
 
     def testFindingEmptyHandleWithValidId(self):
         video_handle = ""
         video_id_in_db = "P_fHJIYENdI"
-        self.assertEqual(nosub.findId(video_handle, video_id_in_db, self.videos_table), False)
+        self.assertEqual(nosub.findID(video_handle, video_id_in_db, self.videos_table), False)
 
     def testFindingEmptyId(self):
         video_handle = "veritasium"
         video_id_not_in_db = ""
-        self.assertEqual(nosub.findId(video_handle, video_id_not_in_db, self.videos_table), False)
+        self.assertEqual(nosub.findID(video_handle, video_id_not_in_db, self.videos_table), False)
 
     #find handle
     def testFindingValidVideoHandle(self):
@@ -707,13 +707,13 @@ class TestDataBase(unittest.TestCase):
         non_dup_handle = "Dummy"
         valid_video_id = "AB7pBrudFbg"
         with self.assertRaises(SystemExit):
-            nosub.addId(non_dup_handle, valid_video_id, self.videos_table)
+            nosub.addID(non_dup_handle, valid_video_id, self.videos_table)
 
     def testInsertingDuplicateReleaseId(self):
         non_dup_handle = "Dummy"
         valid_release_id = "OLAK5uy_mqUpJnm37KuCU0D5kF4SdvqTkK0WGIdWg"
         with self.assertRaises(SystemExit):
-            nosub.addId(non_dup_handle, valid_release_id, self.releases_table)
+            nosub.addID(non_dup_handle, valid_release_id, self.releases_table)
 
     #a duplicate handle would just result in an update
     """
@@ -721,7 +721,7 @@ class TestDataBase(unittest.TestCase):
         valid_handle = "smartereveryday"
         non_dup_id = "JVROsxtjoCw"
         with self.assertRaises(SystemExit):
-            nosub.addId(valid_handle, non_dup_id, self.videos_table)
+            nosub.addID(valid_handle, non_dup_id, self.videos_table)
     """
 
     #|-----------------------|
@@ -735,17 +735,17 @@ class TestDataBase(unittest.TestCase):
     def testAddingSQLInjection(self):
         sql_injection =  "50); DELETE FROM KnownReleases;--        " #try to delete all releases
         valid_handle = "TestGuy8"
-        self.assertEqual( nosub.addId(valid_handle, sql_injection, self.releases_table), -1)
+        self.assertEqual( nosub.addID(valid_handle, sql_injection, self.releases_table), -1)
 
     def testAddingSQLInjection2(self):
         sql_injection2 = "OLAK5uy_le); DELETE FROM KnownReleases;--" #try to delete all releases
         valid_handle = "TestGuy9"
-        self.assertEqual( nosub.addId(valid_handle, sql_injection2, self.releases_table), -1)
+        self.assertEqual( nosub.addID(valid_handle, sql_injection2, self.releases_table), -1)
 
     def testAddingSQLInjection3(self):
         sql_injection3 = "0);--      " #try to insert an id of zero to videos
         valid_handle = "TestGuy10"
-        self.assertEqual(nosub.addId(valid_handle, sql_injection3, self.videos_table), -1)
+        self.assertEqual(nosub.addID(valid_handle, sql_injection3, self.videos_table), -1)
 
     #these sql injections are testing the updating portion
     #SELECT COUNT(*) FROM KnownVideos WHERE handle = ?;
@@ -754,27 +754,27 @@ class TestDataBase(unittest.TestCase):
     def testUpdatingSQLInjection(self):
         video_handle = "smartereveryday"
         sql_injection =  "\"OR 1=1;-- "
-        self.assertEqual( nosub.addId(video_handle, sql_injection, self.videos_table), -1)
+        self.assertEqual( nosub.addID(video_handle, sql_injection, self.videos_table), -1)
 
     def testUpdatingSQLInjection2(self):
         video_handle = "smartereveryday"
         sql_injection2 = "'OR 1=1;-- "
-        self.assertEqual( nosub.addId(video_handle, sql_injection2, self.videos_table), -1)
+        self.assertEqual( nosub.addID(video_handle, sql_injection2, self.videos_table), -1)
 
     def testUpdatingSQLInjection3(self):
         video_handle = "smartereveryday"
         sql_injection3 = "\"\"OR 1=1;--"
-        self.assertEqual(nosub.addId(video_handle, sql_injection3, self.videos_table), -1)
+        self.assertEqual(nosub.addID(video_handle, sql_injection3, self.videos_table), -1)
 
     def testUpdatingSQLInjection4(self):
         video_handle = "smartereveryday"
         sql_injection4 = "2 OR 1=1;--"
-        self.assertEqual(nosub.addId(video_handle, sql_injection4, self.videos_table), -1)
+        self.assertEqual(nosub.addID(video_handle, sql_injection4, self.videos_table), -1)
 
     def testUpdatingSQLInjection5(self):
         release_handle = "NeonNox"
         sql_injection5 = "injected' WHERE 'blue' = 'blue';--      "
-        self.assertEqual(nosub.addId(release_handle, sql_injection5, self.releases_table), -1)
+        self.assertEqual(nosub.addID(release_handle, sql_injection5, self.releases_table), -1)
 
     #these sql injections are for the finding portion
     #SELECT COUNT(id) FROM KnownVideos WHERE known_id = <id> AND handle = <handle>;
@@ -782,32 +782,32 @@ class TestDataBase(unittest.TestCase):
     def testFindingSQLInjection(self):
         video_handle = "veritasium"
         sql_injection =  "\"OR 1=1;-- "
-        self.assertEqual( nosub.findId(video_handle, sql_injection, self.videos_table), False)
+        self.assertEqual( nosub.findID(video_handle, sql_injection, self.videos_table), False)
 
     def testFindingSQLInjection2(self):
         video_handle = "veritasium"
         sql_injection2 = "'OR 1=1;-- "
-        self.assertEqual( nosub.findId(video_handle, sql_injection2, self.videos_table), False)
+        self.assertEqual( nosub.findID(video_handle, sql_injection2, self.videos_table), False)
 
     def testFindingSQLInjection3(self):
         video_handle = "veritasium"
         sql_injection3 = "\"\"OR 1=1;--"
-        self.assertEqual(nosub.findId(video_handle, sql_injection3, self.videos_table), False)
+        self.assertEqual(nosub.findID(video_handle, sql_injection3, self.videos_table), False)
 
     def testFindingSQLInjection4(self):
         video_handle = "veritasium"
         sql_injection4 = "2 OR 1=1;--"
-        self.assertEqual(nosub.findId(video_handle, sql_injection4, self.videos_table), False)
+        self.assertEqual(nosub.findID(video_handle, sql_injection4, self.videos_table), False)
 
     def testFindingSQLInjection5(self):
         release_handle = "BuddhaTrixie"
         sql_injection5 = "injected' WHERE 'blue' = 'blue';--      "
-        self.assertEqual(nosub.findId(release_handle, sql_injection5, self.releases_table), False)
+        self.assertEqual(nosub.findID(release_handle, sql_injection5, self.releases_table), False)
 
     def testFindingSQLInjection6(self):
         release_handle = "BuddhaTrixie"
         sql_injection6 = "LIKE '%HJ%'"
-        self.assertEqual(nosub.findId(release_handle, sql_injection6, self.videos_table), False)
+        self.assertEqual(nosub.findID(release_handle, sql_injection6, self.videos_table), False)
 
 #Separate method so that a different testing DB can be used
 class ClearDataBase(unittest.TestCase):
