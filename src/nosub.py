@@ -14,8 +14,8 @@ from collections import namedtuple
 Constant_Codes = namedtuple('_Constant_Codes', ["EXIT_SUCCESS", "EXIT_FAILURE"])
 exit_codes = Constant_Codes(EXIT_SUCCESS = 0, EXIT_FAILURE = 1)
 
-Constant_DB = namedtuple('_Constant_DB', ["V_TABLE", "R_TABLE"])
-db_tables = Constant_DB(V_TABLE = "KnownVideos", R_TABLE = "KnownReleases")
+Constant_DB = namedtuple('_Constant_DB', ["V_TABLE", "R_TABLE", "DB_NAME"])
+db_tables = Constant_DB(V_TABLE = "KnownVideos", R_TABLE = "KnownReleases", DB_NAME = "knowns.db")
 
 Constant_YT = namedtuple('_Constant_YT', ["YT_BASE", "YTER_PAGE", "YT_VIDEOS", "YT_RELEASES", "YTER_LEN", "V_ID_LEN", "R_ID_LEN"])
 constant_yt = Constant_YT(YT_BASE = "https://www.youtube.com/watch?v=", YTER_PAGE = "https://www.youtube.com/@", YT_VIDEOS = "videos", YT_RELEASES = "releases", YTER_LEN = 25, V_ID_LEN = 11, R_ID_LEN = 41)
@@ -33,8 +33,11 @@ verboseprint = None
 #It's more clean than having the connection in a list to force
 #it to be mutable. I mean this is still forcing it to be mutable, but is more "clean"
 class ConnectionWrapper:
-    def __init__(self, connection=None):
+    CLOSED = 0
+    OPEN = 1
+    def __init__(self, connection = None, status = CLOSED):
         self.connection = connection
+        self.status = status
 
 def main():
     global verboseprint
@@ -490,6 +493,7 @@ def addID(handle:str, id: str, table: str, conn_wrapper: ConnectionWrapper):
     assert handle is not None, "Can't add a None handle"
     assert table in (db_tables.V_TABLE, db_tables.R_TABLE), f"Invalid table given {table}"
     assert isinstance(conn_wrapper, ConnectionWrapper), "Not using the connection wrapper for adding an ID"
+    assert conn_wrapper.status == conn_wrapper.OPEN, "Attempting to used a closed connection to add an ID"
 
     #with the usage of parameterized queries sanitization is not necessary
     #but validation is necessary to prevent garbage data in.
@@ -509,7 +513,7 @@ def addID(handle:str, id: str, table: str, conn_wrapper: ConnectionWrapper):
 
     count_handle = f"SELECT COUNT(id) FROM {table} WHERE handle = ?;"
     #connection = connectToDB()
-    cursor = conn_wrapper.connect.cursor()
+    cursor = conn_wrapper.connection.cursor()
     result = (cursor.execute(count_handle, (handle,))).fetchone()[0]
     #add entry if it doesn't exist otherwise update it
     #if it fails to add there is no need to rollback as the single statement failed
@@ -539,6 +543,7 @@ def findID(handle: str, id: str, table: str, conn_wrapper: ConnectionWrapper):
     assert handle is not None, "Can't find a None handle"
     assert table in (db_tables.V_TABLE, db_tables.R_TABLE), f"Invalid table given {table}"
     assert isinstance(conn_wrapper, ConnectionWrapper), "Not using the connection wrapper for finding an ID"
+    assert conn_wrapper.status == conn_wrapper.OPEN, "Attempting to used a closed connection to find an ID"
 
     search_query = f"SELECT COUNT(id) FROM {table} WHERE known_id = ? AND handle = ?;"
     #connection = connectToDB()
@@ -553,6 +558,7 @@ def findHandle(handle: str, table: str, conn_wrapper: ConnectionWrapper):
     assert handle is not None, "Can't find a None handle"
     assert table in (db_tables.V_TABLE, db_tables.R_TABLE), f"Invalid table given {table}"
     assert isinstance(conn_wrapper, ConnectionWrapper), "Not using the connection wrapper for finding a handle"
+    assert conn_wrapper.status == conn_wrapper.OPEN, "Attempting to used a closed connection to find a handle"
 
     search_query = f"SELECT COUNT(id) FROM {table} WHERE handle = ?;"
     #connection = connectToDB()
@@ -566,24 +572,29 @@ def findHandle(handle: str, table: str, conn_wrapper: ConnectionWrapper):
 def connectToDB(conn_object: ConnectionWrapper):
     assert isinstance(conn_object, ConnectionWrapper), "Tried to make a connection without the wrapper"
 
-    if conn_object.connection is None:
-        conn_object.connection = sqlite3.connect("knowns.db", isolation_level = None)
+    if conn_object.status == conn_object.CLOSED:
+        conn_object.connection = sqlite3.connect(db_tables.DB_NAME, isolation_level = None)
+        conn_object.status = conn_object.OPEN
 
-    assert conn_object.connection is not None, "Can't use DB connection for it is None"
+
+    assert conn_object.status == conn_object.OPEN, "Opening a DB connection resulted in a status of closed"
+    assert conn_object.connection is not None, "Connection object is opened but remained None"
 
 def closeConnection(conn_object: ConnectionWrapper):
     assert isinstance(conn_object, ConnectionWrapper), "Tried to close a connection without the wrapper"
 
-    if conn_object:
+    if conn_object.status == conn_object.OPEN:
         conn_object.connection.close()
         conn_object.connection = None
+        conn_object.status = conn_object.CLOSED
 
-    assert conn_object.connection is None, "Connection was not closed"
+    assert conn_object.status == conn_object.CLOSED, "Closing a connection still kept the connection status open"
+    assert conn_object.connection is None, "Connection object is closed but is not None"
 
 def init():
-    #connection = connectToDB()
     conn_wrapped = ConnectionWrapper()
     connectToDB(conn_wrapped)
+    status = 0
     try:
         cursor = conn_wrapped.connection.cursor()
         #auto increment is used since string primary keys are a little bit
@@ -607,14 +618,12 @@ def init():
         cursor.execute(create_videos)
         cursor.execute(create_releases)
         conn_wrapped.connection.commit()
-        closeConnection(conn_wrapped)
     except sqlite3.Error as error:
         print(error)
-        return -1
+        status = -1
 
-    return 0
-
-
+    closeConnection(conn_wrapped)
+    return status
 
 if __name__ == "__main__":
     main()
