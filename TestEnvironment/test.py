@@ -3,7 +3,10 @@ import sys
 import os
 import json
 import sqlite3
+import random
+import string
 from requests.models import Response
+from unittest.mock import MagicMock
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
@@ -476,11 +479,10 @@ class TestDataBase(unittest.TestCase):
     #create db needed for testing
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = nosub.ConnectionWrapper()
-        cls.testing_connection.connection = sqlite3.connect(":memory:", isolation_level = None)
-
-        #seed database with consistent data
-        cursor = cls.testing_connection.connection.cursor()
+        cls.testing_wrapper = nosub.ConnectionWrapper()
+        cls.testing_wrapper.connection = sqlite3.connect(":memory:")
+        cls.testing_wrapper.status = nosub.ConnectionWrapper.OPEN
+        cls.cursor = cls.testing_wrapper.connection.cursor()
 
         create_videos = """
         CREATE TABLE IF NOT EXISTS KnownVideos (
@@ -497,6 +499,7 @@ class TestDataBase(unittest.TestCase):
         );
         """
 
+        #seed database with consistent data
         add_videos = """
             INSERT INTO KnownVideos (handle, known_id) VALUES
             ('smartereveryday', 'JVROsxtjoCw'),
@@ -510,40 +513,22 @@ class TestDataBase(unittest.TestCase):
         """
 
         #delete any existing data before adding new data
-        delete_videos = "DELETE FROM KnownVideos"
-        delete_releases = "DELETE FROM KnownReleases"
+        #delete_videos = "DELETE FROM KnownVideos"
+        #delete_releases = "DELETE FROM KnownReleases"
 
-        cursor.execute(create_videos)
-        cursor.execute(create_releases)
+        cls.cursor.execute(create_videos)
+        cls.cursor.execute(create_releases)
 
-        cursor.execute(delete_videos)
-        cursor.execute(delete_releases)
+        #cls.cursor.execute(delete_videos)
+        #cls.cursor.execute(delete_releases)
 
-        cursor.execute(add_videos)
-        cursor.execute(add_releases)
-        cls.testing_connection.connection.commit()
-
+        cls.cursor.execute(add_videos)
+        cls.cursor.execute(add_releases)
+        cls.testing_wrapper.connection.commit()
 
     @classmethod
     def tearDownClass(cls):
-        cls.testing_connection.connection.close()
-
-        #deletion is done during begining of execution that was the database
-        #can be inspected before starting new tests
-
-    def setUp(self):
-        self.patcher_db_conn = patch("sqlite3.connect", side_effect = self.mocked_connection)
-        self.mock_connection = self.patcher_db_conn.start()
-        self.cursor = self.testing_connection.connection.cursor()
-
-    def tearDown(self):
-        self.patcher_db_conn.stop()
-
-    def mocked_connection(self, *args, **kwargs):
-        #if not self.testing_connection:
-        #    self.testing_connection = sqlite3.connect("Testing.db")
-
-        return self.testing_connection
+        cls.testing_wrapper.connection.close()
 
     #Don't need to include all the tests that exist for validating handles and ids
     #Do need to test some as testing how the method reacts to invalid input is still important
@@ -551,46 +536,46 @@ class TestDataBase(unittest.TestCase):
     def testAddingNewHandleAndVideo(self):
         valid_handle = "TestGuy1"
         valid_video_id = "AB7pBrudFbg"
-        self.assertEqual(nosub.addID(valid_handle, valid_video_id, self.videos_table, self.testing_connection), 0)
+        self.assertEqual(nosub.addID(valid_handle, valid_video_id, self.videos_table, self.testing_wrapper), 0)
         result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.videos_table} WHERE {self.id_field} = '{valid_video_id}' AND handle = '{valid_handle}';")
         self.assertEqual(result.fetchone()[0], 1)
 
     def testAddingNewHandleAndReleaseId(self):
         valid_handle = "TestGuy1"
         valid_release_id = "OLAK5uy_mqUpJnm37KuCU0D5kF4SdvqTkK0WGIdWg"
-        self.assertEqual(nosub.addID(valid_handle, valid_release_id, self.releases_table, self.testing_connection), 0)
+        self.assertEqual(nosub.addID(valid_handle, valid_release_id, self.releases_table, self.testing_wrapper), 0)
         result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{valid_release_id}' AND handle = '{valid_handle}';")
         self.assertEqual(result.fetchone()[0], 1)
 
     def testAddingAHandleThatIsInvalid(self):
         invalid_handle = "IAmAReallyLongHandleThatCannotOccur"
         valid_release_id = "OLAK5uy_mqUpJnm37KuCU0D5kF4SdvqTkK0WGIdWg"
-        self.assertEqual(nosub.addID(invalid_handle, valid_release_id, self.releases_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(invalid_handle, valid_release_id, self.releases_table, self.testing_wrapper), -1)
 
     def testAddingVideoIdThatHasInvalidCharacters(self):
         valid_handle = "TestGuy6"
         invalid_video_id3 = "8^![l]|e783"
-        self.assertEqual(nosub.addID(valid_handle, invalid_video_id3, self.videos_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(valid_handle, invalid_video_id3, self.videos_table, self.testing_wrapper), -1)
 
     def testAddingReleaseIdThatHasInvalidCharacters(self):
         valid_handle = "TestGuy6"
         invalid_release_id2 = "OLAK5uy_m!U'Jnm37KuCU0D;kF4SdvqT K0WGIdWw"
-        self.assertEqual(nosub.addID(valid_handle, invalid_release_id2, self.releases_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(valid_handle, invalid_release_id2, self.releases_table, self.testing_wrapper), -1)
 
     def testAddingEmptyHandle(self):
         empty = ""
         valid_video_id = "AB7pBrudFbg"
-        self.assertEqual(nosub.addID(empty, valid_video_id, self.videos_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(empty, valid_video_id, self.videos_table, self.testing_wrapper), -1)
 
     def testAddingEmptyVideoId(self):
         valid_handle = "TestGuy7"
         empty = ""
-        self.assertEqual(nosub.addID(valid_handle, empty, self.videos_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(valid_handle, empty, self.videos_table, self.testing_wrapper), -1)
 
     def testAddingEmptyReleaseId(self):
         valid_handle = "TestGuy7"
         empty = ""
-        self.assertEqual(nosub.addID(valid_handle, empty, self.releases_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(valid_handle, empty, self.releases_table, self.testing_wrapper), -1)
 
     #|----------|
     #| Updating |
@@ -599,41 +584,41 @@ class TestDataBase(unittest.TestCase):
     def testUpdatingWithVideoId(self):
         video_handle = "smartereveryday"
         update_video = "lylCYkgC63Q"
-        self.assertEqual(nosub.addID(video_handle, update_video, self.videos_table, self.testing_connection), 0)
+        self.assertEqual(nosub.addID(video_handle, update_video, self.videos_table, self.testing_wrapper), 0)
         result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.videos_table} WHERE {self.id_field} = '{update_video}' AND handle = '{video_handle}';")
         self.assertEqual(result.fetchone()[0], 1)
 
     def testUpdatingWithReleaseId(self):
         release_handle = "NeonNox"
         update_release = "OLAK5uy_mQYefdFy2Kk8UPkdiJA6gnOvu3wfFATHU"
-        self.assertEqual(nosub.addID(release_handle, update_release, self.releases_table, self.testing_connection), 0)
+        self.assertEqual(nosub.addID(release_handle, update_release, self.releases_table, self.testing_wrapper), 0)
         result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{update_release}' AND handle = '{release_handle}';")
         self.assertEqual(result.fetchone()[0], 1)
 
     def testUpdatingWithAnInvalidVideoId(self):
         video_handle = "smartereveryday"
         invalid_update_video = "8^![l]|e783"
-        self.assertEqual(nosub.addID(video_handle, invalid_update_video, self.videos_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(video_handle, invalid_update_video, self.videos_table, self.testing_wrapper), -1)
 
     def testUpdatingWithAnInvalidReleaseId(self):
         release_handle = "NeonNox"
         invalid_update_release = "OLAK5uy_m!U'Jnm37KuCU0D;kF4SdvqT K0WGIdWw"
-        self.assertEqual(nosub.addID(release_handle, invalid_update_release, self.releases_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(release_handle, invalid_update_release, self.releases_table, self.testing_wrapper), -1)
 
     def testUpdatingUsingAnEmptyHandle(self):
         empty = ""
         update_video = "lylCYkgC63Q"
-        self.assertEqual(nosub.addID(empty, update_video, self.videos_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(empty, update_video, self.videos_table, self.testing_wrapper), -1)
 
     def testUpdatingUpdatingUsingAnEmptyVideoId(self):
         video_handle = "smartereveryday"
         empty = ""
-        self.assertEqual(nosub.addID(video_handle, empty, self.videos_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(video_handle, empty, self.videos_table, self.testing_wrapper), -1)
 
     def testUpdatingUpdatingUsingAnEmptyReleaseId(self):
         release_handle = "NeonNox"
         empty = ""
-        self.assertEqual(nosub.addID(release_handle, empty, self.releases_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(release_handle, empty, self.releases_table, self.testing_wrapper), -1)
 
     #|---------|
     #| Finding |
@@ -642,63 +627,63 @@ class TestDataBase(unittest.TestCase):
     def testFindingValidHandleAndVideoId(self):
         video_handle = "veritasium"
         find_video_id = "P_fHJIYENdI"
-        self.assertEqual(nosub.findID(video_handle, find_video_id, self.videos_table, self.testing_connection), True)
+        self.assertEqual(nosub.findID(video_handle, find_video_id, self.videos_table, self.testing_wrapper), True)
 
     def testFindingValidHandleAndReleaseId(self):
         release_handle = "BuddhaTrixie"
         find_release_id = "OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"
-        self.assertEqual(nosub.findID(release_handle, find_release_id, self.releases_table, self.testing_connection), True)
+        self.assertEqual(nosub.findID(release_handle, find_release_id, self.releases_table, self.testing_wrapper), True)
 
     def testFindingInvalidHandleButValidVideoId(self):
         handle_not_in_db = "HeHeHeHa"
         find_video_id = "P_fHJIYENdI"
-        self.assertEqual(nosub.findID(handle_not_in_db, find_video_id, self.videos_table, self.testing_connection), False)
+        self.assertEqual(nosub.findID(handle_not_in_db, find_video_id, self.videos_table, self.testing_wrapper), False)
 
     def testFindingInvalidHandleButValidReleaseId(self):
         handle_not_in_db = "HeHeHeHa"
         find_release_id = "OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"
-        self.assertEqual(nosub.findID(handle_not_in_db, find_release_id, self.releases_table, self.testing_connection), False)
+        self.assertEqual(nosub.findID(handle_not_in_db, find_release_id, self.releases_table, self.testing_wrapper), False)
 
     def testFindingValidHandleButInvalidVideoId(self):
         video_handle = "veritasium"
         video_id_not_in_db = "7md_gd3HuMQ"
-        self.assertEqual(nosub.findID(video_handle, video_id_not_in_db, self.videos_table, self.testing_connection), False)
+        self.assertEqual(nosub.findID(video_handle, video_id_not_in_db, self.videos_table, self.testing_wrapper), False)
 
     def testFindingValidHandleButInvalidReleaseId(self):
         release_handle = "BuddhaTrixie"
         release_id_not_in_db = "OLAK5uy_ncH3yFRhelTJAfdpWp4CigIDPGnjihZvs"
-        self.assertEqual(nosub.findID(release_handle, release_id_not_in_db, self.videos_table, self.testing_connection), False)
+        self.assertEqual(nosub.findID(release_handle, release_id_not_in_db, self.videos_table, self.testing_wrapper), False)
 
     def testFindingEmptyHandleWithValidId(self):
         video_handle = ""
         video_id_in_db = "P_fHJIYENdI"
-        self.assertEqual(nosub.findID(video_handle, video_id_in_db, self.videos_table, self.testing_connection), False)
+        self.assertEqual(nosub.findID(video_handle, video_id_in_db, self.videos_table, self.testing_wrapper), False)
 
     def testFindingEmptyId(self):
         video_handle = "veritasium"
         video_id_not_in_db = ""
-        self.assertEqual(nosub.findID(video_handle, video_id_not_in_db, self.videos_table, self.testing_connection), False)
+        self.assertEqual(nosub.findID(video_handle, video_id_not_in_db, self.videos_table, self.testing_wrapper), False)
 
     #find handle
     def testFindingValidVideoHandle(self):
         video_handle = "veritasium"
-        self.assertEqual(nosub.findHandle(video_handle, self.videos_table, self.testing_connection), True)
+        self.assertEqual(nosub.findHandle(video_handle, self.videos_table, self.testing_wrapper), True)
 
     def testFindingValidReleaseHandle(self):
         release_handle = "BuddhaTrixie"
-        self.assertEqual(nosub.findHandle(release_handle, self.releases_table, self.testing_connection), True)
+        self.assertEqual(nosub.findHandle(release_handle, self.releases_table, self.testing_wrapper), True)
 
     def testFindingHandleNotInDB(self):
         handle_not_in_db = "HeHeHeHa"
-        self.assertEqual(nosub.findHandle(handle_not_in_db, self.videos_table, self.testing_connection), False)
+        self.assertEqual(nosub.findHandle(handle_not_in_db, self.videos_table, self.testing_wrapper), False)
 
     def testFindingEmptyVideoHandle(self):
         empty_handle = ""
-        self.assertEqual(nosub.findHandle(empty_handle, self.videos_table, self.testing_connection), False)
+        self.assertEqual(nosub.findHandle(empty_handle, self.videos_table, self.testing_wrapper), False)
 
     def testFindingEmptyReleaseHandle(self):
         empty_handle = ""
-        self.assertEqual(nosub.findHandle(empty_handle, self.releases_table, self.testing_connection), False)
+        self.assertEqual(nosub.findHandle(empty_handle, self.releases_table, self.testing_wrapper), False)
 
     #|-------------------|
     #| Duplicate testing |
@@ -708,13 +693,13 @@ class TestDataBase(unittest.TestCase):
         non_dup_handle = "Dummy"
         valid_video_id = "AB7pBrudFbg"
         with self.assertRaises(SystemExit):
-            nosub.addID(non_dup_handle, valid_video_id, self.videos_table, self.testing_connection)
+            nosub.addID(non_dup_handle, valid_video_id, self.videos_table, self.testing_wrapper)
 
     def testInsertingDuplicateReleaseId(self):
         non_dup_handle = "Dummy"
         valid_release_id = "OLAK5uy_mqUpJnm37KuCU0D5kF4SdvqTkK0WGIdWg"
         with self.assertRaises(SystemExit):
-            nosub.addID(non_dup_handle, valid_release_id, self.releases_table, self.testing_connection)
+            nosub.addID(non_dup_handle, valid_release_id, self.releases_table, self.testing_wrapper)
 
     #a duplicate handle would just result in an update
     """
@@ -736,17 +721,17 @@ class TestDataBase(unittest.TestCase):
     def testAddingSQLInjection(self):
         sql_injection =  "50); DELETE FROM KnownReleases;--        " #try to delete all releases
         valid_handle = "TestGuy8"
-        self.assertEqual( nosub.addID(valid_handle, sql_injection, self.releases_table, self.testing_connection), -1)
+        self.assertEqual( nosub.addID(valid_handle, sql_injection, self.releases_table, self.testing_wrapper), -1)
 
     def testAddingSQLInjection2(self):
         sql_injection2 = "OLAK5uy_le); DELETE FROM KnownReleases;--" #try to delete all releases
         valid_handle = "TestGuy9"
-        self.assertEqual( nosub.addID(valid_handle, sql_injection2, self.releases_table, self.testing_connection), -1)
+        self.assertEqual( nosub.addID(valid_handle, sql_injection2, self.releases_table, self.testing_wrapper), -1)
 
     def testAddingSQLInjection3(self):
         sql_injection3 = "0);--      " #try to insert an id of zero to videos
         valid_handle = "TestGuy10"
-        self.assertEqual(nosub.addID(valid_handle, sql_injection3, self.videos_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(valid_handle, sql_injection3, self.videos_table, self.testing_wrapper), -1)
 
     #these sql injections are testing the updating portion
     #SELECT COUNT(*) FROM KnownVideos WHERE handle = ?;
@@ -755,27 +740,27 @@ class TestDataBase(unittest.TestCase):
     def testUpdatingSQLInjection(self):
         video_handle = "smartereveryday"
         sql_injection =  "\"OR 1=1;-- "
-        self.assertEqual( nosub.addID(video_handle, sql_injection, self.videos_table, self.testing_connection), -1)
+        self.assertEqual( nosub.addID(video_handle, sql_injection, self.videos_table, self.testing_wrapper), -1)
 
     def testUpdatingSQLInjection2(self):
         video_handle = "smartereveryday"
         sql_injection2 = "'OR 1=1;-- "
-        self.assertEqual( nosub.addID(video_handle, sql_injection2, self.videos_table, self.testing_connection), -1)
+        self.assertEqual( nosub.addID(video_handle, sql_injection2, self.videos_table, self.testing_wrapper), -1)
 
     def testUpdatingSQLInjection3(self):
         video_handle = "smartereveryday"
         sql_injection3 = "\"\"OR 1=1;--"
-        self.assertEqual(nosub.addID(video_handle, sql_injection3, self.videos_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(video_handle, sql_injection3, self.videos_table, self.testing_wrapper), -1)
 
     def testUpdatingSQLInjection4(self):
         video_handle = "smartereveryday"
         sql_injection4 = "2 OR 1=1;--"
-        self.assertEqual(nosub.addID(video_handle, sql_injection4, self.videos_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(video_handle, sql_injection4, self.videos_table, self.testing_wrapper), -1)
 
     def testUpdatingSQLInjection5(self):
         release_handle = "NeonNox"
         sql_injection5 = "injected' WHERE 'blue' = 'blue';--      "
-        self.assertEqual(nosub.addID(release_handle, sql_injection5, self.releases_table, self.testing_connection), -1)
+        self.assertEqual(nosub.addID(release_handle, sql_injection5, self.releases_table, self.testing_wrapper), -1)
 
     #these sql injections are for the finding portion
     #SELECT COUNT(id) FROM KnownVideos WHERE known_id = <id> AND handle = <handle>;
@@ -783,55 +768,85 @@ class TestDataBase(unittest.TestCase):
     def testFindingSQLInjection(self):
         video_handle = "veritasium"
         sql_injection =  "\"OR 1=1;-- "
-        self.assertEqual(nosub.findID(video_handle, sql_injection, self.videos_table, self.testing_connection), False)
+        self.assertEqual(nosub.findID(video_handle, sql_injection, self.videos_table, self.testing_wrapper), False)
 
     def testFindingSQLInjection2(self):
         video_handle = "veritasium"
         sql_injection2 = "'OR 1=1;-- "
-        self.assertEqual(nosub.findID(video_handle, sql_injection2, self.videos_table, self.testing_connection), False)
+        self.assertEqual(nosub.findID(video_handle, sql_injection2, self.videos_table, self.testing_wrapper), False)
 
     def testFindingSQLInjection3(self):
         video_handle = "veritasium"
         sql_injection3 = "\"\"OR 1=1;--"
-        self.assertEqual(nosub.findID(video_handle, sql_injection3, self.videos_table, self.testing_connection), False)
+        self.assertEqual(nosub.findID(video_handle, sql_injection3, self.videos_table, self.testing_wrapper), False)
 
     def testFindingSQLInjection4(self):
         video_handle = "veritasium"
         sql_injection4 = "2 OR 1=1;--"
-        self.assertEqual(nosub.findID(video_handle, sql_injection4, self.videos_table, self.testing_connection), False)
+        self.assertEqual(nosub.findID(video_handle, sql_injection4, self.videos_table, self.testing_wrapper), False)
 
     def testFindingSQLInjection5(self):
         release_handle = "BuddhaTrixie"
         sql_injection5 = "injected' WHERE 'blue' = 'blue';--      "
-        self.assertEqual(nosub.findID(release_handle, sql_injection5, self.releases_table, self.testing_connection), False)
+        self.assertEqual(nosub.findID(release_handle, sql_injection5, self.releases_table, self.testing_wrapper), False)
 
     def testFindingSQLInjection6(self):
         release_handle = "BuddhaTrixie"
         sql_injection6 = "LIKE '%HJ%'"
-        self.assertEqual(nosub.findID(release_handle, sql_injection6, self.videos_table, self.testing_connection), False)
+        self.assertEqual(nosub.findID(release_handle, sql_injection6, self.videos_table, self.testing_wrapper), False)
+
+def randomString():
+    #30 characters should be sufficient enough
+    #isn't cryptographically secure probably
+    length = 30
+    random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+    return random_string
+
+
+def setupExecutionMocks(self):
+    self.patcher_request = patch("requests.get", side_effect = self.mockObtainHtmls).start()
+    self.mock_browser = patch("webbrowser.open_new_tab", return_value = None).start()
+
+#random string of characters are used since using :memory: is based
+#off processes, and threads are within a process so each connection
+#would be to the same shared :memory: db
+def setUpRandomDB(self, initial_table):
+    self.random_db = f"./RandomDBs/{randomString()}.db"
+    self.testing_connection = sqlite3.connect(self.random_db, isolation_level = None)
+    self.cursor = self.testing_connection.cursor()
+
+    #modify global database table so that it uses ours
+    #this way connections and modifications are the same, but it uses our database
+    nosub.db_tables = nosub.Constant_DB(V_TABLE = "KnownVideos", R_TABLE = "KnownReleases", DB_NAME = self.random_db)
+
+    self.cursor.executescript(initial_table)
+    self.testing_connection.commit()
+
+def tearDownRandomDB(self):
+    self.testing_connection.close()
+    os.remove(self.random_db)
+
+def tearDownExecutionMocks(self):
+    self.patcher_request.stop()
+    self.mock_browser.stop()
 
 #Separate method so that a different testing DB can be used
 class ClearDataBase(unittest.TestCase):
-    #create db needed for testing
-    @classmethod
-    def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect(":memory:", isolation_level = None)
-        cls.cursor = cls.testing_connection.cursor()
-
-        create_videos = """
+    def setUp(self):
+        create_tables = """
         CREATE TABLE IF NOT EXISTS KnownVideos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             handle varchar(30) UNIQUE NOT NULL,
             known_id varchar(11) UNIQUE NOT NULL
         );
-        """
-        create_releases = """
         CREATE TABLE IF NOT EXISTS KnownReleases (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             handle varchar(30) UNIQUE NOT NULL,
             known_id varchar(41) UNIQUE NOT NULL
         );
         """
+
+        setUpRandomDB(self, create_tables)
 
         add_videos = """
             INSERT INTO KnownVideos (handle, known_id) VALUES
@@ -845,36 +860,21 @@ class ClearDataBase(unittest.TestCase):
             ('BuddhaTrixie', 'OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0')
         """
 
-        #delete any existing data before adding new data
-        delete_videos = "DELETE FROM KnownVideos"
-        delete_releases = "DELETE FROM KnownReleases"
-
-        cls.cursor.execute(create_videos)
-        cls.cursor.execute(create_releases)
-
-        cls.cursor.execute(delete_videos)
-        cls.cursor.execute(delete_releases)
-
-        cls.cursor.execute(add_videos)
-        cls.cursor.execute(add_releases)
-        cls.testing_connection.commit()
-
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.testing_connection.close()
-
-    def setUp(self):
-        self.patcher_db_conn = patch("sqlite3.connect", side_effect = self.mocked_connection)
-        self.mock_connection = self.patcher_db_conn.start()
+        self.cursor.execute(add_videos)
+        self.cursor.execute(add_releases)
+        self.testing_connection.commit()
 
     def tearDown(self):
-        self.patcher_db_conn.stop()
+        tearDownRandomDB(self)
+
+    #def setUp(self):
+    #    self.patcher_db_conn = patch("nosub.connectToDB", side_effect = self.mocked_connection)
+    #    self.mock_connection = self.patcher_db_conn.start()
+
+    #def tearDown(self):
+    #    self.patcher_db_conn.stop()
 
     def mocked_connection(self, *args, **kwargs):
-        #if not self.testing_connection:
-        #    self.testing_connection = sqlite3.connect("DeleteTesting.db")
-
         return self.testing_connection
 
     def testClearData(self):
@@ -889,51 +889,51 @@ class ClearDataBase(unittest.TestCase):
             self.assertEqual(release_result.fetchone()[0], 0)
 
         self.assertEqual(ex.exception.code, 0)
+        #self.assertEqual(self.testing_connection.status, nosub.ConnectionWrapper.CLOSED)
 
 #Tests fail points that all execution branches would have
 #Nothing here should interact with the database and if it does it'll result in a crash
 class CommonExecutionFails(unittest.TestCase):
-
     @classmethod
-    def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("CommonFails.db", isolation_level = None)
-        cls.cursor = cls.testing_connection.cursor()
 
     def setUp(self):
-        self.patcher_request = patch("requests.get", side_effect = self.mockObtainHtmls)
-        self.patcher_db_conn = patch("sqlite3.connect", return_value = self.testing_connection)
+        #don't make a table hence ""
+        setUpRandomDB(self, "")
 
-        self.patcher_request.start()
-        self.patcher_db_conn.start()
+        #don't need to care about init I want to test the files
+        self.patcher_init = patch("nosub.init", return_value = 0)
+        self.patcher_exec = patch("nosub.normalExec", side_effect = self.mockExec)
+
+        self.patcher_init.start()
+        self.patcher_exec.start()
 
     def tearDown(self):
-        self.patcher_request.stop()
-        self.patcher_db_conn.stop()
+        tearDownRandomDB(self)
+        self.patcher_init.stop()
+        self.patcher_exec.stop()
 
-    def mockObtainHtmls(self, *args, **kwargs):
-        raise Exception("Should not be trying to make request calls in common fail points class")
-
-    #def mocked_connection(self, *args, **kwargs):
-        #if not self.testing_connection:
-        #    self.testing_connection = sqlite3.connect("CommonFails.db")
-
-        #return self.testing_connection
+    def mockExec(self, *args, **kwargs):
+        raise Exception("Should not make calls to execution with a list of bad files")
 
     def testFirstFileBadOtherGood(self):
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit) as ex:
             sys.argv = ["nosub.py", "-f", "yepIAmNotReal.txt", "./TestFiles/ExecutionTesting/releases.txt"]
             nosub.main()
 
+        self.assertEqual(ex.exception.code, 1)
+
 
     def testFirstFileGoodOtherBad(self):
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit) as ex:
             sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "yepIAmNotReal.txt"]
             nosub.main()
+
+        self.assertEqual(ex.exception.code, 1)
 
 #Tests the actual execution of the program
 #Some things are mocked so that it can be done offline and with consistency
 
-#the test file used contains 6 entries
+#the test file used contains 6 entries for normal execution
 #5 of which result in a 200 response with data
 #1 is a response that results in a 404 and no content
 
@@ -949,24 +949,6 @@ class NormalExecutionTesting(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("NormalExecutionTesting.db", isolation_level = None)
-        cls.cursor = cls.testing_connection.cursor()
-
-        #create_videos = """
-        #CREATE TABLE IF NOT EXISTS KnownVideos (
-        #    id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #    handle varchar(30) UNIQUE NOT NULL,
-        #    known_id varchar(11) UNIQUE NOT NULL
-        #);
-        #"""
-        #delete any existing data before adding new data
-        #delete_videos = "DELETE FROM KnownVideos"
-
-        #cursor.execute(create_videos)
-        #cursor.execute(delete_videos)
-
-        #cls.testing_connection.connection.commit()
-
         file1 = open("./TestData/ExecutionHtmls/Long_Break_An0nymooose.html", "rb")
         file2 = open("./TestData/ExecutionHtmls/Many_Daily_Uploads_Romanian_Tvee.html", "rb")
         file3 = open("./TestData/ExecutionHtmls/7_Hour_Upload_Technology_Connections.html", "rb")
@@ -988,25 +970,21 @@ class NormalExecutionTesting(unittest.TestCase):
         file5.close()
         file6.close()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.testing_connection.close()
-
     def setUp(self):
-        self.patcher_request = patch("requests.get", side_effect = self.mockObtainHtmls)
-        self.patcher_db_conn = patch("sqlite3.connect", return_value = self.testing_connection)
-        self.patcher_mock_browser = patch("webbrowser.open_new_tab")
+        create_videos = """
+        CREATE TABLE IF NOT EXISTS KnownVideos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            handle varchar(30) UNIQUE NOT NULL,
+            known_id varchar(11) UNIQUE NOT NULL
+        );
+        """
 
-        self.patcher_request.start()
-        self.patcher_db_conn.start()
-        self.mock_browser = self.patcher_mock_browser.start()
-
-        self.mock_browser.return_value = None
+        setUpRandomDB(self, create_videos)
+        setupExecutionMocks(self)
 
     def tearDown(self):
-        self.patcher_request.stop()
-        self.patcher_db_conn.stop()
-        self.patcher_mock_browser.stop()
+        tearDownRandomDB(self)
+        tearDownExecutionMocks(self)
 
     def mockObtainHtmls(self, *args, **kwargs):
         response = Response()
@@ -1037,17 +1015,6 @@ class NormalExecutionTesting(unittest.TestCase):
             raise Exception(f"Mocked html elements did not get expected args. Got {args}")
 
         return response
-
-    #def mocked_connection(self, *args, **kwargs):
-        #if not self.testing_connection:
-        #    self.testing_connection = sqlite3.connect("ExecutionTesting.db")
-
-        #return self.testing_connection
-
-    def clearDB(self):
-        #cursor = self.testing_connection.cursor()
-        self.cursor.execute("DELETE FROM KnownVideos")
-        self.testing_connection.commit()
 
     #despite any execution the most recent video should be in the db
     def verifyPostDB(self):
@@ -1085,7 +1052,6 @@ class NormalExecutionTesting(unittest.TestCase):
 
     #with no stopping point and time frame given this should just load the first videos seen
     def testNormalFromFreshStartWithDefaultSettings(self):
-        self.clearDB()
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 5)
@@ -1104,36 +1070,34 @@ class NormalExecutionTesting(unittest.TestCase):
 
     #Just checking if the verbose prints out
     #this doesn't really care if the program runs correctly but that verbosity is printed
-    def testNormalVerbose(self):
-        self.clearDB()
-        #cursor = self.testing_connection.connection.cursor()
-        add_videos = """
-            INSERT INTO KnownVideos (handle, known_id) VALUES
-            ('thedoubtfultechnician', 'fq--H6KvqUg')
-        """
-        self.cursor.execute(add_videos)
-        self.testing_connection.connection.commit()
+    #def testNormalVerbose(self):
+    #    #cursor = self.testing_connecting.cursor()
+    #    add_videos = """
+    #        INSERT INTO KnownVideos (handle, known_id) VALUES
+    #        ('thedoubtfultechnician', 'fq--H6KvqUg')
+    #    """
+    #    self.cursor.execute(add_videos)
+    #    self.testing_connecting.commit()
 
-        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_video.txt", "-v"]
-        #redirect output to a file
-        original_out = sys.stdout
-        with open("verbose_test_videos.txt", "w") as verbose_test:
-            sys.stdout = verbose_test
-            nosub.main()
+    #    sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_video.txt", "-v"]
+    #    #redirect output to a file
+    #    original_out = sys.stdout
+    #    with open("verbose_test_videos.txt", "w") as verbose_test:
+    #        sys.stdout = verbose_test
+    #        nosub.main()
 
-        sys.stdout = original_out
+    #    sys.stdout = original_out
 
-        #read redirect file
-        contents = ""
-        with open("verbose_test_videos.txt", "r") as verbose_test:
-            contents = verbose_test.read()
-            self.assertTrue("checking handle TechnologyConnections" in contents)
-            self.assertTrue("checking handle thedoubtfultechnician" in contents)
-            self.assertTrue("Loading URL https://www.youtube.com/watch?v=QEJpZjg8GuA" in contents)
-            self.assertTrue("Youtube channel thedoubtfultechnician has not uploaded in 5 days" in contents)
+    #    #read redirect file
+    #    contents = ""
+    #    with open("verbose_test_videos.txt", "r") as verbose_test:
+    #        contents = verbose_test.read()
+    #        self.assertTrue("checking handle TechnologyConnections" in contents)
+    #        self.assertTrue("checking handle thedoubtfultechnician" in contents)
+    #        self.assertTrue("Loading URL https://www.youtube.com/watch?v=QEJpZjg8GuA" in contents)
+    #        self.assertTrue("Youtube channel thedoubtfultechnician has not uploaded in 5 days" in contents)
 
     def testNormalFromFreshStartWithMultipleFilesDefaultSettings(self):
-        self.clearDB()
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos_split_1.txt", "./TestFiles/ExecutionTesting/videos_split_2.txt"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 5)
@@ -1154,8 +1118,7 @@ class NormalExecutionTesting(unittest.TestCase):
     #normal case with WillTennyson and anonymooose
     #   anonymooose having the case of two years break
     def testNormalWithSomeDataInDatabaseDefaultSettings(self):
-        self.clearDB()
-        cursor = self.testing_connection.connection.cursor()
+        #cursor = self.testing_connection.cursor()
         add_videos = """
             INSERT INTO KnownVideos (handle, known_id) VALUES
             ('RomanianTvee', '3W0yMU06_pY'),
@@ -1163,8 +1126,8 @@ class NormalExecutionTesting(unittest.TestCase):
             ('WillTennyson', 'Y3oXlvHhdsk'),
             ('TechnologyConnections', 'QEJpZjg8GuA')
         """
-        cursor.execute(add_videos)
-        self.testing_connection.connection.commit()
+        self.cursor.execute(add_videos)
+        self.testing_connection.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt"]
         nosub.main()
@@ -1192,8 +1155,7 @@ class NormalExecutionTesting(unittest.TestCase):
     #mainly tests if the program is capable of handling loading streak of videos
     #and stopping at the proper known id
     def testNormalWhereUserHasnotUsedProgram2MonthsDefaultSettings(self):
-        self.clearDB()
-        #cursor = self.testing_connection.connection.cursor()
+        #cursor = self.testing_connection.cursor()
         add_videos = """
             INSERT INTO KnownVideos (handle, known_id) VALUES
             ('RomanianTvee', 'Gg5DObWXubE'),
@@ -1203,7 +1165,7 @@ class NormalExecutionTesting(unittest.TestCase):
             ('thedoubtfultechnician', '-lhWtTY7kPQ')
         """
         self.cursor.execute(add_videos)
-        self.testing_connection.connection.commit()
+        self.testing_connection.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt"]
         nosub.main()
@@ -1266,8 +1228,7 @@ class NormalExecutionTesting(unittest.TestCase):
     #at the known id even if it's within the time frame to be loaded
     #also tests from doubtful technician if it'll load a video from an unknown handle within the time frame
     def testNormalWhereTimeFrameGivenAndSomeData(self):
-        self.clearDB()
-        cursor = self.testing_connection.connection.cursor()
+        #cursor = self.testing_connection.cursor()
         #RTV from 3 days ago
         add_videos = """
             INSERT INTO KnownVideos (handle, known_id) VALUES
@@ -1275,8 +1236,8 @@ class NormalExecutionTesting(unittest.TestCase):
             ('an0nymooose', 'RzNkY1_Nk3o'),
             ('WillTennyson', 'lFzccuoS3ag')
         """
-        cursor.execute(add_videos)
-        self.testing_connection.connection.commit()
+        self.cursor.execute(add_videos)
+        self.testing_connection.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-t", "7", "days"]
         nosub.main()
@@ -1305,8 +1266,6 @@ class NormalExecutionTesting(unittest.TestCase):
     #the given time frame. Perhaps someone needs to clear the database and still
     #wants to load some videos within a time frame they know about will get some videos
     def testNormalFreshWithTimeFrameDefaultSettings(self):
-        self.clearDB()
-
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-t", "7", "days"]
         nosub.main()
 
@@ -1343,7 +1302,6 @@ class NormalExecutionTesting(unittest.TestCase):
 
     #tests if max loads will mess up default behavior without a time frame on a fresh start
     def testNormalFromFreshStartWithDefaultSettingsSpecifyingMax(self):
-        self.clearDB()
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-n", "2"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 5)
@@ -1359,8 +1317,7 @@ class NormalExecutionTesting(unittest.TestCase):
         self.verifyPostDB()
 
     def testNormalWithMaxLoadsWithDataFrom2Months(self):
-        self.clearDB()
-        #cursor = self.testing_connection.connection.cursor()
+        #cursor = self.testing_connection.cursor()
         add_videos = """
             INSERT INTO KnownVideos (handle, known_id) VALUES
             ('RomanianTvee', 'Gg5DObWXubE'),
@@ -1370,7 +1327,7 @@ class NormalExecutionTesting(unittest.TestCase):
             ('thedoubtfultechnician', '-lhWtTY7kPQ')
         """
         self.cursor.execute(add_videos)
-        self.testing_connection.connection.commit()
+        self.testing_connection.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-n", "2"]
         nosub.main()
@@ -1392,8 +1349,6 @@ class NormalExecutionTesting(unittest.TestCase):
 
     #tests if max loads will over rule time frame even at fresh
     def testNormalFreshWithTimeFrameAndMaxLoadsSetToOne(self):
-        self.clearDB()
-
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-t", "3", "weeks", "-n", "1"]
         nosub.main()
 
@@ -1409,8 +1364,7 @@ class NormalExecutionTesting(unittest.TestCase):
         self.verifyPostDB()
 
     def testNormalWithDataFrom2MonthsWithTimeFrameAndMaxLoads(self):
-        self.clearDB()
-        #cursor = self.testing_connection.connection.cursor()
+        #cursor = self.testing_connection.cursor()
         add_videos = """
             INSERT INTO KnownVideos (handle, known_id) VALUES
             ('RomanianTvee', 'Gg5DObWXubE'),
@@ -1420,7 +1374,7 @@ class NormalExecutionTesting(unittest.TestCase):
             ('thedoubtfultechnician', '-lhWtTY7kPQ')
         """
         self.cursor.execute(add_videos)
-        self.testing_connection.connection.commit()
+        self.testing_connection.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-t", "3", "weeks", "-n", "2"]
         nosub.main()
@@ -1447,31 +1401,28 @@ class NormalExecutionTesting(unittest.TestCase):
         self.verifyPostDB()
 
     def testNormalWithNewLineFile(self):
-        self.clearDB()
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/newlines.txt",]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 0)
-        #cursor = self.testing_connection.connection.cursor()
+        #cursor = self.testing_connection.cursor()
         self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
     def testNormalWithEmptyFile(self):
-        self.clearDB()
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/empty.txt"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 0)
-        #cursor = self.testing_connection.connection.cursor()
+        #cursor = self.testing_connection.cursor()
         self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
     #the /usr/bin/sh does have read permission for everyone
     def testNormalPassingABinary(self):
-        self.clearDB()
         sys.argv = ["nosub.py", "-f", "/usr/bin/sh"]
         with self.assertRaises(UnicodeDecodeError):
             nosub.main()
 
-        #cursor = self.testing_connection.connection.cursor()
+        #cursor = self.testing_connection.cursor()
         self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
@@ -1484,26 +1435,6 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("ReleaseExecutionTesting.db", isolation_level = None)
-        #cls.cursor = cls.testing_connection.cursor()
-        #cursor = cls.testing_connection.connection.cursor()
-
-        #create_releases = """
-        #CREATE TABLE IF NOT EXISTS KnownReleases (
-        #    id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #    handle varchar(30) UNIQUE NOT NULL,
-        #    known_id varchar(41) UNIQUE NOT NULL
-        #);
-        #"""
-
-        #delete any existing data before adding new data
-        #delete_releases = "DELETE FROM KnownReleases"
-
-        #cursor.execute(create_releases)
-        #cursor.execute(delete_releases)
-
-        #cls.testing_connection.connection.commit()
-
         file1 = open("./TestData/ExecutionHtmls/Neon_Nox_Releases.html", "rb")
         file2 = open("./TestData/ExecutionHtmls/Tom_Cardy_Releases.html", "rb")
         file3 = open("./TestData/ExecutionHtmls/Buddha_Trixie_Releases.html", "rb")
@@ -1524,24 +1455,24 @@ class ReleaseExecutionTesting(unittest.TestCase):
         file3.close()
         file4.close()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.testing_connection.close()
-
     def setUp(self):
-        self.patcher_request = patch("requests.get", side_effect = self.mockObtainHtmls)
-        self.patcher_db_conn = patch("sqlite3.connect", return_value = self.testing_connection)
-        self.patcher_mock_browser = patch("webbrowser.open_new_tab")
-
-        self.patcher_request.start()
-        self.patcher_db_conn.start()
-        self.mock_browser = self.patcher_mock_browser.start()
-        self.mock_browser.return_value = None
+        create_releases = """
+        CREATE TABLE IF NOT EXISTS KnownReleases (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            handle varchar(30) UNIQUE NOT NULL,
+            known_id varchar(41) UNIQUE NOT NULL
+        );
+        """
+        setUpRandomDB(self, create_releases)
+        setupExecutionMocks(self)
 
     def tearDown(self):
-        self.patcher_request.stop()
-        self.patcher_db_conn.stop()
-        self.patcher_mock_browser.stop()
+        tearDownRandomDB(self)
+        tearDownExecutionMocks(self)
+
+    def mocked_connection(self, *args, **kwargs):
+        self.testing_connection = sqlite3.connect("ReleaseExecutionTesting.db")
+        return self.testing_connection
 
     def mockObtainHtmls(self, *args, **kwargs):
         response = Response()
@@ -1565,20 +1496,9 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
         return response
 
-    #def mocked_connection(self, *args, **kwargs):
-        #if not self.testing_connection:
-        #    self.testing_connection = sqlite3.connect("ReleaseExecutionTesting.db")
-
-        #return self.testing_connection
-
-    def clearDB(self):
-        cursor = self.testing_connection.cursor()
-        cursor.execute("DELETE FROM KnownReleases")
-        self.testing_connection.commit()
-
     #despite any execution the most recent video should be in the db
     def verifyPostDB(self):
-        cursor = self.testing_connection.cursor()
+        #cursor = self.testing_connection.cursor()
         neon_handle = "NeonNox"
         tom_handle = "tomcardy1"
         buddha_handle = "BuddhaTrixie"
@@ -1588,19 +1508,18 @@ class ReleaseExecutionTesting(unittest.TestCase):
         new_buddha_id = "OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"
 
         with self.subTest(msg = f"Testing handle {neon_handle} is set to have id {new_neon_id}"):
-            result = cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{new_neon_id}' AND handle = '{neon_handle}';")
+            result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{new_neon_id}' AND handle = '{neon_handle}';")
             self.assertEqual(result.fetchone()[0], 1)
 
         with self.subTest(msg = f"Testing handle {tom_handle} is set to have id {new_tom_id}"):
-            result = cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{new_tom_id}' AND handle = '{tom_handle}';")
+            result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{new_tom_id}' AND handle = '{tom_handle}';")
             self.assertEqual(result.fetchone()[0], 1)
 
         with self.subTest(msg = f"Testing handle {buddha_handle} is set to have id {new_buddha_id}"):
-            result = cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{new_buddha_id}' AND handle = '{buddha_handle}';")
+            result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.releases_table} WHERE {self.id_field} = '{new_buddha_id}' AND handle = '{buddha_handle}';")
             self.assertEqual(result.fetchone()[0], 1)
 
     def testReleaseFromFreshStartWithDefaultSettings(self):
-        self.clearDB()
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-r"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 3)
@@ -1618,36 +1537,34 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     #Just checking if the verbose prints out
     #this doesn't really care if the program runs correctly but that verbosity is printed
-    def testReleaseVerbose(self):
-        self.clearDB()
-        cursor = self.testing_connection.connection.cursor()
-        add_videos = """
-            INSERT INTO KnownReleases (handle, known_id) VALUES
-            ('NeonNox', 'OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA')
-        """
-        cursor.execute(add_videos)
-        self.testing_connection.commit()
+    #def testReleaseVerbose(self):
+    #    cursor = self.testing_connection.cursor()
+    #    add_videos = """
+    #        INSERT INTO KnownReleases (handle, known_id) VALUES
+    #        ('NeonNox', 'OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA')
+    #    """
+    #    cursor.execute(add_videos)
+    #    self.testing_connection.commit()
 
-        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_release.txt", "-v", "-r"]
-        #redirect output to a file
-        original_out = sys.stdout
-        with open("verbose_test_releases.txt", "w") as verbose_test:
-            sys.stdout = verbose_test
-            nosub.main()
+    #    sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_release.txt", "-v", "-r"]
+    #    #redirect output to a file
+    #    original_out = sys.stdout
+    #    with open("verbose_test_releases.txt", "w") as verbose_test:
+    #        sys.stdout = verbose_test
+    #        nosub.main()
 
-        sys.stdout = original_out
+    #    sys.stdout = original_out
 
-        #read redirect file
-        contents = ""
-        with open("verbose_test_releases.txt", "r") as verbose_test:
-            contents = verbose_test.read()
-            self.assertTrue("checking handle NeonNox" in contents)
-            self.assertTrue("checking handle tomcardy1" in contents)
-            self.assertTrue("Loading URL https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc" in contents)
-            self.assertTrue("No new releases for channel NeonNox" in contents)
+    #    #read redirect file
+    #    contents = ""
+    #    with open("verbose_test_releases.txt", "r") as verbose_test:
+    #        contents = verbose_test.read()
+    #        self.assertTrue("checking handle NeonNox" in contents)
+    #        self.assertTrue("checking handle tomcardy1" in contents)
+    #        self.assertTrue("Loading URL https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc" in contents)
+    #        self.assertTrue("No new releases for channel NeonNox" in contents)
 
     def testReleaseFromFreshStartWithMultipleFilesDefaultSettings(self):
-        self.clearDB()
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases_split_1.txt", "./TestFiles/ExecutionTesting/releases_split_2.txt", "-r"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 3)
@@ -1664,8 +1581,7 @@ class ReleaseExecutionTesting(unittest.TestCase):
     #id already known tomcardy1
     #handle not known yet Buddha Trixie
     def testReleaseWithSomeDataInDatabaseDefaultSettings(self):
-        self.clearDB()
-        cursor = self.testing_connection.cursor()
+        #cursor = self.testing_connection.cursor()
         #tom cardy as no new content
         #neon nox as a streak of new releases
         #buddha trixies as new handle seen
@@ -1674,8 +1590,8 @@ class ReleaseExecutionTesting(unittest.TestCase):
             ('NeonNox', 'OLAK5uy_kPHcvm3O4a4cTRlPfqlZh3btNIoxRWF4E'),
             ('tomcardy1', 'OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc')
         """
-        cursor.execute(add_releases)
-        self.testing_connection.connection.commit()
+        self.cursor.execute(add_releases)
+        self.testing_connection.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-r"]
         nosub.main()
@@ -1694,15 +1610,14 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     #sets database 2 releases behind
     def testReleaseWhereEachEntryWillLoad2PlaylistsDefaultSettings(self):
-        self.clearDB()
-        cursor = self.testing_connection.connection.cursor()
+        #cursor = self.testing_connection.cursor()
         add_releases = """
             INSERT INTO KnownReleases (handle, known_id) VALUES
             ('NeonNox', 'OLAK5uy_kPHcvm3O4a4cTRlPfqlZh3btNIoxRWF4E'),
             ('tomcardy1', 'OLAK5uy_mFtIU1Yjyv7vaVR3nMaS__4fn3SDwSOWc'),
             ('BuddhaTrixie', 'OLAK5uy_lXGNChVf0HPaiNVZ9Ce6pD7aDvkn4gqIk')
         """
-        cursor.execute(add_releases)
+        self.cursor.execute(add_releases)
         self.testing_connection.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-r"]
@@ -1726,8 +1641,6 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     #time frame can't be used with releases
     def testReleaseWithTimeFrameGiven(self):
-        self.clearDB()
-
         with self.assertRaises(SystemExit):
             sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-t", "7", "days", "-r"]
             nosub.main()
@@ -1736,7 +1649,6 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     #since it's in default settings at fresh it should only load one video
     def testReleaseFromFreshStartWithDefaultSettingsSpecifyingMaxOf2(self):
-        self.clearDB()
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-n", "2", "-r"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 3)
@@ -1750,8 +1662,7 @@ class ReleaseExecutionTesting(unittest.TestCase):
         self.verifyPostDB()
 
     def testReleaseWithMaxLoadsSetAt2WithDifferingData(self):
-        self.clearDB()
-        #cursor = self.testing_connection.connection.cursor()
+        #cursor = self.testing_connection.cursor()
         #neon nox knows 2nd
         #tomcardy knows 3rd
         #buddha trixie knows 4th
@@ -1763,7 +1674,7 @@ class ReleaseExecutionTesting(unittest.TestCase):
         """
         self.cursor.execute(add_releases)
 
-        self.testing_connection.connection.commit()
+        self.testing_connection.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-n", "2", "-r"]
         nosub.main()
@@ -1785,8 +1696,6 @@ class ReleaseExecutionTesting(unittest.TestCase):
         self.verifyPostDB()
 
     def testReleaseFreshWithTimeFrameAndMaxLoads(self):
-        self.clearDB()
-
         with self.assertRaises(SystemExit):
             sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-t", "3", "weeks", "-n", "1", "-r"]
             nosub.main()
@@ -1794,32 +1703,29 @@ class ReleaseExecutionTesting(unittest.TestCase):
         self.assertEqual(self.mock_browser.call_count, 0)
 
     def testReleaseWithNewLineFile(self):
-        self.clearDB()
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/newlines.txt", "-r"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 0)
-        cursor = self.testing_connection.connection.cursor()
-        cursor.execute("SELECT COUNT(*) FROM KnownVideos")
+        #cursor = self.testing_connection.cursor()
+        self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
     def testReleaseWithEmptyFile(self):
-        self.clearDB()
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/empty.txt", "-r"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 0)
-        cursor = self.testing_connection.connection.cursor()
-        cursor.execute("SELECT COUNT(*) FROM KnownVideos")
+        #cursor = self.testing_connection.cursor()
+        self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
     #the /usr/bin/sh does have read permission for everyone
     def testReleasePassingABinary(self):
-        self.clearDB()
         sys.argv = ["nosub.py", "-f", "/usr/bin/sh", "-r"]
         with self.assertRaises(UnicodeDecodeError):
             nosub.main()
 
-        cursor = self.testing_connection.connection.cursor()
-        cursor.execute("SELECT COUNT(*) FROM KnownVideos")
+        #cursor = self.testing_connection.cursor()
+        self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
 #since both execution is just calling normalExec and releaseExec
@@ -1834,38 +1740,6 @@ class BothExecutionTesting(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.testing_connection = sqlite3.connect("BothExecutionTesting.db", isolation_level = None)
-        cls.cursor = cls.testing_connection.cursor()
-        #cursor = cls.testing_connection.connection.cursor()
-
-        #create_videos = """
-        #CREATE TABLE IF NOT EXISTS KnownVideos (
-        #    id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #    handle varchar(30) UNIQUE NOT NULL,
-        #    known_id varchar(11) UNIQUE NOT NULL
-        #);
-        #"""
-
-        #create_releases = """
-        #CREATE TABLE IF NOT EXISTS KnownReleases (
-        #    id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #    handle varchar(30) UNIQUE NOT NULL,
-        #    known_id varchar(41) UNIQUE NOT NULL
-        #);
-        #"""
-
-        #delete any existing data before adding new data
-        #delete_videos = "DELETE FROM KnownVideos"
-        #delete_releases = "DELETE FROM KnownReleases"
-
-        #cursor.execute(create_videos)
-        #cursor.execute(create_releases)
-
-        #cursor.execute(delete_releases)
-        #cursor.execute(delete_videos)
-
-        #cls.testing_connection.connection.commit()
-
         file1 = open("./TestData/ExecutionHtmls/Long_Break_An0nymooose.html", "rb")
         file2 = open("./TestData/ExecutionHtmls/Many_Daily_Uploads_Romanian_Tvee.html", "rb")
         file3 = open("./TestData/ExecutionHtmls/7_Hour_Upload_Technology_Connections.html", "rb")
@@ -1905,25 +1779,25 @@ class BothExecutionTesting(unittest.TestCase):
         file10.close()
         file11.close()
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.testing_connection.close()
-
     def setUp(self):
-        self.patcher_request = patch("requests.get", side_effect = self.mockObtainHtmls)
-        self.patcher_db_conn = patch("sqlite3.connect", return_value = self.testing_connection)
-        self.patcher_mock_browser = patch("webbrowser.open_new_tab")
-
-        self.patcher_request.start()
-        self.patcher_db_conn.start()
-        self.mock_browser = self.patcher_mock_browser.start()
-
-        self.mock_browser.return_value = None
+        create_tables = """
+        CREATE TABLE IF NOT EXISTS KnownVideos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            handle varchar(30) UNIQUE NOT NULL,
+            known_id varchar(11) UNIQUE NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS KnownReleases (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            handle varchar(30) UNIQUE NOT NULL,
+            known_id varchar(41) UNIQUE NOT NULL
+        );
+        """
+        setUpRandomDB(self, create_tables)
+        setupExecutionMocks(self)
 
     def tearDown(self):
-        self.patcher_request.stop()
-        self.patcher_db_conn.stop()
-        self.patcher_mock_browser.stop()
+        tearDownRandomDB(self)
+        tearDownExecutionMocks(self)
 
     def mockObtainHtmls(self, *args, **kwargs):
         response = Response()
@@ -1971,18 +1845,6 @@ class BothExecutionTesting(unittest.TestCase):
             response._content = self.home_page_redirect
 
         return response
-
-    #def mocked_connection(self, *args, **kwargs):
-        #if not self.testing_connection:
-        #    self.testing_connection = sqlite3.connect("BothExecutionTesting.db")
-
-    #    return self.testing_connection
-
-    def clearDB(self):
-        #cursor = self.testing_connection.cursor()
-        self.cursor.execute("DELETE FROM KnownReleases")
-        self.cursor.execute("DELETE FROM KnownVideos")
-        self.testing_connection.commit()
 
     def verifyPostDB(self):
         #cursor = self.testing_connection.cursor()
@@ -2037,7 +1899,6 @@ class BothExecutionTesting(unittest.TestCase):
             self.assertEqual(result.fetchone()[0], 1)
 
     def testBothExecutionFreshDefault(self):
-        self.clearDB()
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/both.txt", "-b"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 8)
@@ -2057,7 +1918,6 @@ class BothExecutionTesting(unittest.TestCase):
 
     #Releases don't use the time frame, but videos do
     def testBothFreshWithTimeFrameDefault(self):
-        self.clearDB()
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/both.txt", "-b", "-t", "2", "days"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 9)
@@ -2075,6 +1935,10 @@ class BothExecutionTesting(unittest.TestCase):
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
+
+class InitTest(unittest.TestCase):
+    def hi():
+        print()
 
 if __name__ == '__main__':
     unittest.main()
