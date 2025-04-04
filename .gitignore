@@ -2,6 +2,7 @@
 *.txt
 *.json
 *.html
+*.copy
 
 Makefile
 Youtubers/
