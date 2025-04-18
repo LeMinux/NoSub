@@ -808,8 +808,8 @@ def setupExecutionMocks(self):
     self.mock_browser = patch("webbrowser.open_new_tab", return_value = None).start()
 
 #random string of characters are used since using :memory: is based
-#off processes, and threads are within a process so each connection
-#would be to the same shared :memory: db
+#off processes, so each connection would be to the same shared :memory: db
+#I suppose forking could work, but that seems too intensive
 def setUpRandomDB(self, initial_table):
     self.random_db = f"./RandomDBs/{randomString()}.db"
     self.testing_connection = sqlite3.connect(self.random_db, isolation_level = None)
@@ -867,18 +867,10 @@ class ClearDataBase(unittest.TestCase):
     def tearDown(self):
         tearDownRandomDB(self)
 
-    #def setUp(self):
-    #    self.patcher_db_conn = patch("nosub.connectToDB", side_effect = self.mocked_connection)
-    #    self.mock_connection = self.patcher_db_conn.start()
-
-    #def tearDown(self):
-    #    self.patcher_db_conn.stop()
-
     def mocked_connection(self, *args, **kwargs):
         return self.testing_connection
 
     def testClearData(self):
-        #cursor = self.testing_connection.cursor()
         option = "--clear-knowns"
         with self.assertRaises(SystemExit) as ex:
             sys.argv = ["nosub.py", "-f", "cur_dir_test.txt", option]
@@ -1018,7 +1010,6 @@ class NormalExecutionTesting(unittest.TestCase):
 
     #despite any execution the most recent video should be in the db
     def verifyPostDB(self):
-        #cursor = self.testing_connection.cursor()
         rtv_handle = "RomanianTvee"
         mooose_handle = "an0nymooose"
         tech_connection_handle = "TechnologyConnections"
@@ -1109,7 +1100,6 @@ class NormalExecutionTesting(unittest.TestCase):
     #normal case with WillTennyson and anonymooose
     #   anonymooose having the case of two years break
     def testNormalWithSomeDataInDatabaseDefaultSettings(self):
-        #cursor = self.testing_connection.cursor()
         add_videos = """
             INSERT INTO KnownVideos (handle, known_id) VALUES
             ('RomanianTvee', '3W0yMU06_pY'),
@@ -1146,7 +1136,6 @@ class NormalExecutionTesting(unittest.TestCase):
     #mainly tests if the program is capable of handling loading streak of videos
     #and stopping at the proper known id
     def testNormalWhereUserHasnotUsedProgram2MonthsDefaultSettings(self):
-        #cursor = self.testing_connection.cursor()
         add_videos = """
             INSERT INTO KnownVideos (handle, known_id) VALUES
             ('RomanianTvee', 'Gg5DObWXubE'),
@@ -1219,7 +1208,6 @@ class NormalExecutionTesting(unittest.TestCase):
     #at the known id even if it's within the time frame to be loaded
     #also tests from doubtful technician if it'll load a video from an unknown handle within the time frame
     def testNormalWhereTimeFrameGivenAndSomeData(self):
-        #cursor = self.testing_connection.cursor()
         #RTV from 3 days ago
         add_videos = """
             INSERT INTO KnownVideos (handle, known_id) VALUES
@@ -1308,7 +1296,6 @@ class NormalExecutionTesting(unittest.TestCase):
         self.verifyPostDB()
 
     def testNormalWithMaxLoadsWithDataFrom2Months(self):
-        #cursor = self.testing_connection.cursor()
         add_videos = """
             INSERT INTO KnownVideos (handle, known_id) VALUES
             ('RomanianTvee', 'Gg5DObWXubE'),
@@ -1355,7 +1342,6 @@ class NormalExecutionTesting(unittest.TestCase):
         self.verifyPostDB()
 
     def testNormalWithDataFrom2MonthsWithTimeFrameAndMaxLoads(self):
-        #cursor = self.testing_connection.cursor()
         add_videos = """
             INSERT INTO KnownVideos (handle, known_id) VALUES
             ('RomanianTvee', 'Gg5DObWXubE'),
@@ -1395,7 +1381,6 @@ class NormalExecutionTesting(unittest.TestCase):
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/newlines.txt",]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 0)
-        #cursor = self.testing_connection.cursor()
         self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
@@ -1403,7 +1388,6 @@ class NormalExecutionTesting(unittest.TestCase):
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/empty.txt"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 0)
-        #cursor = self.testing_connection.cursor()
         self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
@@ -1413,7 +1397,6 @@ class NormalExecutionTesting(unittest.TestCase):
         with self.assertRaises(UnicodeDecodeError):
             nosub.main()
 
-        #cursor = self.testing_connection.cursor()
         self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
@@ -1489,7 +1472,6 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     #despite any execution the most recent video should be in the db
     def verifyPostDB(self):
-        #cursor = self.testing_connection.cursor()
         neon_handle = "NeonNox"
         tom_handle = "tomcardy1"
         buddha_handle = "BuddhaTrixie"
@@ -1563,7 +1545,6 @@ class ReleaseExecutionTesting(unittest.TestCase):
     #id already known tomcardy1
     #handle not known yet Buddha Trixie
     def testReleaseWithSomeDataInDatabaseDefaultSettings(self):
-        #cursor = self.testing_connection.cursor()
         #tom cardy as no new content
         #neon nox as a streak of new releases
         #buddha trixies as new handle seen
@@ -1592,7 +1573,6 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     #sets database 2 releases behind
     def testReleaseWhereEachEntryWillLoad2PlaylistsDefaultSettings(self):
-        #cursor = self.testing_connection.cursor()
         add_releases = """
             INSERT INTO KnownReleases (handle, known_id) VALUES
             ('NeonNox', 'OLAK5uy_kPHcvm3O4a4cTRlPfqlZh3btNIoxRWF4E'),
@@ -1644,7 +1624,6 @@ class ReleaseExecutionTesting(unittest.TestCase):
         self.verifyPostDB()
 
     def testReleaseWithMaxLoadsSetAt2WithDifferingData(self):
-        #cursor = self.testing_connection.cursor()
         #neon nox knows 2nd
         #tomcardy knows 3rd
         #buddha trixie knows 4th
@@ -1688,7 +1667,6 @@ class ReleaseExecutionTesting(unittest.TestCase):
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/newlines.txt", "-r"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 0)
-        #cursor = self.testing_connection.cursor()
         self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
@@ -1696,7 +1674,6 @@ class ReleaseExecutionTesting(unittest.TestCase):
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/empty.txt", "-r"]
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 0)
-        #cursor = self.testing_connection.cursor()
         self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
@@ -1706,7 +1683,6 @@ class ReleaseExecutionTesting(unittest.TestCase):
         with self.assertRaises(UnicodeDecodeError):
             nosub.main()
 
-        #cursor = self.testing_connection.cursor()
         self.cursor.execute("SELECT COUNT(*) FROM KnownVideos")
         self.assertEqual(self.cursor.fetchone()[0], 0)
 
@@ -1829,7 +1805,6 @@ class BothExecutionTesting(unittest.TestCase):
         return response
 
     def verifyPostDB(self):
-        #cursor = self.testing_connection.cursor()
         rtv_handle = "RomanianTvee"
         mooose_handle = "an0nymooose"
         tech_connection_handle = "TechnologyConnections"
