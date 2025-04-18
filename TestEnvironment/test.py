@@ -6,7 +6,7 @@ import sqlite3
 import random
 import string
 from requests.models import Response
-from unittest.mock import MagicMock
+from io import StringIO
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
 
@@ -1070,32 +1070,23 @@ class NormalExecutionTesting(unittest.TestCase):
 
     #Just checking if the verbose prints out
     #this doesn't really care if the program runs correctly but that verbosity is printed
-    #def testNormalVerbose(self):
-    #    #cursor = self.testing_connecting.cursor()
-    #    add_videos = """
-    #        INSERT INTO KnownVideos (handle, known_id) VALUES
-    #        ('thedoubtfultechnician', 'fq--H6KvqUg')
-    #    """
-    #    self.cursor.execute(add_videos)
-    #    self.testing_connecting.commit()
+    def testNormalVerbose(self):
+        add_videos = """
+            INSERT INTO KnownVideos (handle, known_id) VALUES
+            ('thedoubtfultechnician', 'fq--H6KvqUg')
+        """
+        self.cursor.execute(add_videos)
+        self.testing_connection.commit()
 
-    #    sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_video.txt", "-v"]
-    #    #redirect output to a file
-    #    original_out = sys.stdout
-    #    with open("verbose_test_videos.txt", "w") as verbose_test:
-    #        sys.stdout = verbose_test
-    #        nosub.main()
+        with patch("sys.stdout", new = StringIO()) as mock_out:
+            sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_video.txt", "-v"]
+            nosub.main()
 
-    #    sys.stdout = original_out
-
-    #    #read redirect file
-    #    contents = ""
-    #    with open("verbose_test_videos.txt", "r") as verbose_test:
-    #        contents = verbose_test.read()
-    #        self.assertTrue("checking handle TechnologyConnections" in contents)
-    #        self.assertTrue("checking handle thedoubtfultechnician" in contents)
-    #        self.assertTrue("Loading URL https://www.youtube.com/watch?v=QEJpZjg8GuA" in contents)
-    #        self.assertTrue("Youtube channel thedoubtfultechnician has not uploaded in 5 days" in contents)
+        output = mock_out.getvalue()
+        self.assertTrue("checking handle TechnologyConnections" in output)
+        self.assertTrue("checking handle thedoubtfultechnician" in output)
+        self.assertTrue("Loading URL https://www.youtube.com/watch?v=QEJpZjg8GuA" in output)
+        self.assertTrue("Youtube channel thedoubtfultechnician has not uploaded in 5 days" in output)
 
     def testNormalFromFreshStartWithMultipleFilesDefaultSettings(self):
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos_split_1.txt", "./TestFiles/ExecutionTesting/videos_split_2.txt"]
@@ -1537,32 +1528,23 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
     #Just checking if the verbose prints out
     #this doesn't really care if the program runs correctly but that verbosity is printed
-    #def testReleaseVerbose(self):
-    #    cursor = self.testing_connection.cursor()
-    #    add_videos = """
-    #        INSERT INTO KnownReleases (handle, known_id) VALUES
-    #        ('NeonNox', 'OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA')
-    #    """
-    #    cursor.execute(add_videos)
-    #    self.testing_connection.commit()
+    def testReleaseVerbose(self):
+        add_videos = """
+            INSERT INTO KnownReleases (handle, known_id) VALUES
+            ('NeonNox', 'OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA')
+        """
+        self.cursor.execute(add_videos)
+        self.testing_connection.commit()
 
-    #    sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_release.txt", "-v", "-r"]
-    #    #redirect output to a file
-    #    original_out = sys.stdout
-    #    with open("verbose_test_releases.txt", "w") as verbose_test:
-    #        sys.stdout = verbose_test
-    #        nosub.main()
+        with patch("sys.stdout", new = StringIO()) as mock_out:
+            sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_release.txt", "-v", "-r"]
+            nosub.main()
 
-    #    sys.stdout = original_out
-
-    #    #read redirect file
-    #    contents = ""
-    #    with open("verbose_test_releases.txt", "r") as verbose_test:
-    #        contents = verbose_test.read()
-    #        self.assertTrue("checking handle NeonNox" in contents)
-    #        self.assertTrue("checking handle tomcardy1" in contents)
-    #        self.assertTrue("Loading URL https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc" in contents)
-    #        self.assertTrue("No new releases for channel NeonNox" in contents)
+        output = mock_out.getvalue()
+        self.assertTrue("checking handle NeonNox" in output)
+        self.assertTrue("checking handle tomcardy1" in output)
+        self.assertTrue("Loading URL https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc" in output)
+        self.assertTrue("No new releases for channel NeonNox" in output)
 
     def testReleaseFromFreshStartWithMultipleFilesDefaultSettings(self):
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases_split_1.txt", "./TestFiles/ExecutionTesting/releases_split_2.txt", "-r"]
