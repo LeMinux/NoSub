@@ -797,38 +797,41 @@ class TestDataBase(unittest.TestCase):
 
 def randomString():
     #30 characters should be sufficient enough
-    #isn't cryptographically secure probably
     length = 30
     random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
     return random_string
 
-
 def setupExecutionMocks(self):
     self.patcher_request = patch("requests.get", side_effect = self.mockObtainHtmls).start()
     self.mock_browser = patch("webbrowser.open_new_tab", return_value = None).start()
+    self.mock_connection = patch("nosub.connectToDB", side_effect = self.mockConnectionToRndDB).start()
+    self.mock_close = patch("nosub.closeConnection", return_value = None)
 
-#random string of characters are used since using :memory: is based
-#off processes, so each connection would be to the same shared :memory: db
-#I suppose forking could work, but that seems too intensive
-def setUpRandomDB(self, initial_table):
-    self.random_db = f"./RandomDBs/{randomString()}.db"
-    self.testing_connection = sqlite3.connect(self.random_db, isolation_level = None)
-    self.cursor = self.testing_connection.cursor()
+def setupRandomDB(self, initial_table):
+    #self.random_db = f"./RandomDBs/{randomString()}.db"
+    #self.testing_db = sqlite3.connect(self.random_db, isolation_level = None)
+
+    #named memory database allow for multiple separate memory databases
+    #temp databases could be used, but disk I/O isn't something to risk here
+    self.connection_string = f"file:{randomString()}?mode=memory&cache=shared"
+    self.testing_db = sqlite3.connect(self.connection_string)
+    self.cursor = self.testing_db.cursor()
 
     #modify global database table so that it uses ours
     #this way connections and modifications are the same, but it uses our database
-    nosub.db_tables = nosub.Constant_DB(V_TABLE = "KnownVideos", R_TABLE = "KnownReleases", DB_NAME = self.random_db)
+    #nosub.db_tables = nosub.Constant_DB(V_TABLE = "KnownVideos", R_TABLE = "KnownReleases", DB_NAME = self.random_db)
 
     self.cursor.executescript(initial_table)
-    self.testing_connection.commit()
+    self.testing_db.commit()
 
 def tearDownRandomDB(self):
-    self.testing_connection.close()
-    os.remove(self.random_db)
+    self.testing_db.close()
+    #os.remove(self.random_db)
 
 def tearDownExecutionMocks(self):
     self.patcher_request.stop()
     self.mock_browser.stop()
+    self.mock_connection.stop()
 
 #Separate method so that a different testing DB can be used
 class ClearDataBase(unittest.TestCase):
@@ -846,7 +849,7 @@ class ClearDataBase(unittest.TestCase):
         );
         """
 
-        setUpRandomDB(self, create_tables)
+        setupRandomDB(self, create_tables)
 
         add_videos = """
             INSERT INTO KnownVideos (handle, known_id) VALUES
@@ -862,13 +865,13 @@ class ClearDataBase(unittest.TestCase):
 
         self.cursor.execute(add_videos)
         self.cursor.execute(add_releases)
-        self.testing_connection.commit()
+        self.testing_db.commit()
 
     def tearDown(self):
         tearDownRandomDB(self)
 
     def mocked_connection(self, *args, **kwargs):
-        return self.testing_connection
+        return self.testing_db
 
     def testClearData(self):
         option = "--clear-knowns"
@@ -881,7 +884,7 @@ class ClearDataBase(unittest.TestCase):
             self.assertEqual(release_result.fetchone()[0], 0)
 
         self.assertEqual(ex.exception.code, 0)
-        #self.assertEqual(self.testing_connection.status, nosub.ConnectionWrapper.CLOSED)
+        #self.assertEqual(self.testing_db.status, nosub.ConnectionWrapper.CLOSED)
 
 #Tests fail points that all execution branches would have
 #Nothing here should interact with the database and if it does it'll result in a crash
@@ -890,7 +893,7 @@ class CommonExecutionFails(unittest.TestCase):
 
     def setUp(self):
         #don't make a table hence ""
-        setUpRandomDB(self, "")
+        setupRandomDB(self, "")
 
         #don't need to care about init I want to test the files
         self.patcher_init = patch("nosub.init", return_value = 0)
@@ -947,6 +950,7 @@ class NormalExecutionTesting(unittest.TestCase):
         file4 = open("./TestData/ExecutionHtmls/5_Day_Upload_The_Doubtful_Technician.html", "rb")
         file5 = open("./TestData/ExecutionHtmls/Changed_Their_Handle.html", "rb")
         file6 = open("./TestData/ExecutionHtmls/Weekly_Uploads_Will_Tennyson.html", "rb")
+        file7 = open("./TestData/ExecutionHtmls/Premiere_Kraut.html", "rb")
 
         cls.anonymooose = file1.read()
         cls.romanian_tvee = file2.read()
@@ -954,6 +958,7 @@ class NormalExecutionTesting(unittest.TestCase):
         cls.doubtful_technician = file4.read()
         cls.change_handle = file5.read()
         cls.will_tennyson = file6.read()
+        cls.kraut = file7.read()
 
         file1.close()
         file2.close()
@@ -961,6 +966,7 @@ class NormalExecutionTesting(unittest.TestCase):
         file4.close()
         file5.close()
         file6.close()
+        file7.close()
 
     def setUp(self):
         create_videos = """
@@ -971,12 +977,16 @@ class NormalExecutionTesting(unittest.TestCase):
         );
         """
 
-        setUpRandomDB(self, create_videos)
+        setupRandomDB(self, create_videos)
         setupExecutionMocks(self)
 
     def tearDown(self):
         tearDownRandomDB(self)
         tearDownExecutionMocks(self)
+
+    def mockConnectionToRndDB(self, *args, **kwargs):
+        args[0].connection = sqlite3.connect(self.connection_string)
+        args[0].status = nosub.ConnectionWrapper.OPEN
 
     def mockObtainHtmls(self, *args, **kwargs):
         response = Response()
@@ -1003,6 +1013,9 @@ class NormalExecutionTesting(unittest.TestCase):
         elif args[0] == "https://www.youtube.com/@WillTennyson/videos":
             response.status_code = 200
             response._content = self.will_tennyson
+        elif args[0] == "https://www.youtube.com/@Kraut_the_Parrot/videos":
+             response.status_code = 200
+             response._content = self.kraut
         else:
             raise Exception(f"Mocked html elements did not get expected args. Got {args}")
 
@@ -1044,6 +1057,7 @@ class NormalExecutionTesting(unittest.TestCase):
     #with no stopping point and time frame given this should just load the first videos seen
     def testNormalFromFreshStartWithDefaultSettings(self):
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt"]
+        print("Calling main")
         nosub.main()
         self.assertEqual(self.mock_browser.call_count, 5)
         call_list =\
@@ -1059,6 +1073,24 @@ class NormalExecutionTesting(unittest.TestCase):
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
 
+    def testNormalWithPremiereFound(self):
+        sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/premiere.txt"]
+        nosub.main()
+        self.assertEqual(self.mock_browser.call_count, 1)
+        call_list =\
+        [
+            call("https://www.youtube.com/watch?v=BE6kJoSc8j0"), #Kraut
+        ]
+        self.mock_browser.assert_has_calls(call_list, any_order = True)
+
+        #this is a special case so the entire db doesn't need a check
+        kraut_handle = "Kraut_the_Parrot"
+        new_kraut_id = "BE6kJoSc8j0"
+
+        with self.subTest(msg = f"Testing handle {kraut_handle} is set to have id {new_kraut_id}"):
+            result = self.cursor.execute(f"SELECT COUNT(id) FROM {self.videos_table} WHERE {self.id_field} = '{new_kraut_id}' AND handle = '{kraut_handle}';")
+            self.assertEqual(result.fetchone()[0], 1)
+
     #Just checking if the verbose prints out
     #this doesn't really care if the program runs correctly but that verbosity is printed
     def testNormalVerbose(self):
@@ -1067,7 +1099,7 @@ class NormalExecutionTesting(unittest.TestCase):
             ('thedoubtfultechnician', 'fq--H6KvqUg')
         """
         self.cursor.execute(add_videos)
-        self.testing_connection.commit()
+        self.testing_db.commit()
 
         with patch("sys.stdout", new = StringIO()) as mock_out:
             sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_video.txt", "-v"]
@@ -1108,7 +1140,7 @@ class NormalExecutionTesting(unittest.TestCase):
             ('TechnologyConnections', 'QEJpZjg8GuA')
         """
         self.cursor.execute(add_videos)
-        self.testing_connection.commit()
+        self.testing_db.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt"]
         nosub.main()
@@ -1145,7 +1177,7 @@ class NormalExecutionTesting(unittest.TestCase):
             ('thedoubtfultechnician', '-lhWtTY7kPQ')
         """
         self.cursor.execute(add_videos)
-        self.testing_connection.commit()
+        self.testing_db.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt"]
         nosub.main()
@@ -1216,7 +1248,7 @@ class NormalExecutionTesting(unittest.TestCase):
             ('WillTennyson', 'lFzccuoS3ag')
         """
         self.cursor.execute(add_videos)
-        self.testing_connection.commit()
+        self.testing_db.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-t", "7", "days"]
         nosub.main()
@@ -1279,18 +1311,25 @@ class NormalExecutionTesting(unittest.TestCase):
         self.verifyPostDB()
 
 
-    #tests if max loads will mess up default behavior without a time frame on a fresh start
+    #behavior has been changed since previously it would only load one regardless
+    #to align more with what the previous test does it'll use the given maximum even if
+    #the youtuber isn't known yet
     def testNormalFromFreshStartWithDefaultSettingsSpecifyingMax(self):
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-n", "2"]
         nosub.main()
-        self.assertEqual(self.mock_browser.call_count, 5)
+        self.assertEqual(self.mock_browser.call_count, 10)
         call_list =\
         [
-            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ"), #rtv
+            call("https://www.youtube.com/watch?v=pqYu8-JjXNQ"), #RTV
+            call("https://www.youtube.com/watch?v=W2DdVFeq1WM"), #RTV
             call("https://www.youtube.com/watch?v=RzNkY1_Nk3o"), #mooose
+            call("https://www.youtube.com/watch?v=G84YqORpjHk"), #mooose
             call("https://www.youtube.com/watch?v=QEJpZjg8GuA"), #tech connect
+            call("https://www.youtube.com/watch?v=HnMuNCl7tZ8"), #tech connect
             call("https://www.youtube.com/watch?v=fq--H6KvqUg"), #doubt tech
-            call("https://www.youtube.com/watch?v=T3d-c1TAQQg")  #will tenny
+            call("https://www.youtube.com/watch?v=o5FQH7LxpU8"), #doubt tech
+            call("https://www.youtube.com/watch?v=T3d-c1TAQQg"), #will tenny
+            call("https://www.youtube.com/watch?v=lFzccuoS3ag")  #will tenny
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1305,7 +1344,7 @@ class NormalExecutionTesting(unittest.TestCase):
             ('thedoubtfultechnician', '-lhWtTY7kPQ')
         """
         self.cursor.execute(add_videos)
-        self.testing_connection.commit()
+        self.testing_db.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-n", "2"]
         nosub.main()
@@ -1351,7 +1390,7 @@ class NormalExecutionTesting(unittest.TestCase):
             ('thedoubtfultechnician', '-lhWtTY7kPQ')
         """
         self.cursor.execute(add_videos)
-        self.testing_connection.commit()
+        self.testing_db.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/videos.txt", "-t", "3", "weeks", "-n", "2"]
         nosub.main()
@@ -1437,16 +1476,16 @@ class ReleaseExecutionTesting(unittest.TestCase):
             known_id varchar(41) UNIQUE NOT NULL
         );
         """
-        setUpRandomDB(self, create_releases)
+        setupRandomDB(self, create_releases)
         setupExecutionMocks(self)
 
     def tearDown(self):
         tearDownRandomDB(self)
         tearDownExecutionMocks(self)
 
-    def mocked_connection(self, *args, **kwargs):
-        self.testing_connection = sqlite3.connect("ReleaseExecutionTesting.db")
-        return self.testing_connection
+    def mockConnectionToRndDB(self, *args, **kwargs):
+        args[0].connection = sqlite3.connect(self.connection_string)
+        args[0].status = nosub.ConnectionWrapper.OPEN
 
     def mockObtainHtmls(self, *args, **kwargs):
         response = Response()
@@ -1516,7 +1555,7 @@ class ReleaseExecutionTesting(unittest.TestCase):
             ('NeonNox', 'OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA')
         """
         self.cursor.execute(add_videos)
-        self.testing_connection.commit()
+        self.testing_db.commit()
 
         with patch("sys.stdout", new = StringIO()) as mock_out:
             sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/verbose_release.txt", "-v", "-r"]
@@ -1538,6 +1577,7 @@ class ReleaseExecutionTesting(unittest.TestCase):
             call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc"), #tom
             call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"), #buddha
         ]
+
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
 
@@ -1554,7 +1594,7 @@ class ReleaseExecutionTesting(unittest.TestCase):
             ('tomcardy1', 'OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc')
         """
         self.cursor.execute(add_releases)
-        self.testing_connection.commit()
+        self.testing_db.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-r"]
         nosub.main()
@@ -1580,7 +1620,7 @@ class ReleaseExecutionTesting(unittest.TestCase):
             ('BuddhaTrixie', 'OLAK5uy_lXGNChVf0HPaiNVZ9Ce6pD7aDvkn4gqIk')
         """
         self.cursor.execute(add_releases)
-        self.testing_connection.commit()
+        self.testing_db.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-r"]
         nosub.main()
@@ -1609,16 +1649,21 @@ class ReleaseExecutionTesting(unittest.TestCase):
 
         self.assertEqual(self.mock_browser.call_count, 0)
 
-    #since it's in default settings at fresh it should only load one video
+    #behavior has been changed since previously it would only load one regardless
+    #to align more with what happens when specifying a time frame it'll use the given maximum even if
+    #the youtuber isn't known yet
     def testReleaseFromFreshStartWithDefaultSettingsSpecifyingMaxOf2(self):
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-n", "2", "-r"]
         nosub.main()
-        self.assertEqual(self.mock_browser.call_count, 3)
+        self.assertEqual(self.mock_browser.call_count, 6)
         call_list =\
         [
             call("https://www.youtube.com/watch?v=ePcdm5Vs8WQ&list=OLAK5uy_kH4jLV7RYNpdfuuVT529OLzvFdKPLyDcA"), #neon
+            call("https://www.youtube.com/watch?v=vWw-lAQJuOk&list=OLAK5uy_lfpGH8uUFwOBDW7N7d1Mi9kbmavtBlz78"), #neon
             call("https://www.youtube.com/watch?v=BLzxuIfD9rU&list=OLAK5uy_nEL-YhKpNaq6yOUM35XCywYdtEh35Lymc"), #tom
+            call("https://www.youtube.com/watch?v=GFokXnCCMf8&list=OLAK5uy_mWLLO29YLEChiYDDDWfVAZKOwG4eIiqkM"), #tom
             call("https://www.youtube.com/watch?v=Lmmfm_vya9Q&list=OLAK5uy_mIg7sAsw6VFdUtKzOxlOWfJ9NU4ueknQ0"), #buddha
+            call("https://www.youtube.com/watch?v=JKg20el5TMg&list=OLAK5uy_mAZrwhX-YJxcRIXNT1lrFB34sN5kiosXU"), #buddha
         ]
         self.mock_browser.assert_has_calls(call_list, any_order = True)
         self.verifyPostDB()
@@ -1635,7 +1680,7 @@ class ReleaseExecutionTesting(unittest.TestCase):
         """
         self.cursor.execute(add_releases)
 
-        self.testing_connection.commit()
+        self.testing_db.commit()
 
         sys.argv = ["nosub.py", "-f", "./TestFiles/ExecutionTesting/releases.txt", "-n", "2", "-r"]
         nosub.main()
@@ -1750,12 +1795,16 @@ class BothExecutionTesting(unittest.TestCase):
             known_id varchar(41) UNIQUE NOT NULL
         );
         """
-        setUpRandomDB(self, create_tables)
+        setupRandomDB(self, create_tables)
         setupExecutionMocks(self)
 
     def tearDown(self):
         tearDownRandomDB(self)
         tearDownExecutionMocks(self)
+
+    def mockConnectionToRndDB(self, *args, **kwargs):
+        args[0].connection = sqlite3.connect(self.connection_string)
+        args[0].status = nosub.ConnectionWrapper.OPEN
 
     def mockObtainHtmls(self, *args, **kwargs):
         response = Response()
