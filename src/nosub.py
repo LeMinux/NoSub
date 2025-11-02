@@ -62,7 +62,7 @@ def main():
     parser.add_argument("-b", "--both", action="store_true", default=False, help="Specify to check videos and releases.")
     parser.add_argument("-r", "--releases", action="store_true", default=False, help="Specify to check ONLY releases")
     parser.add_argument("-t", "--time", nargs=2, help="Specify the time frame to load videos. It must be in the format of the number and then the unit such as \"1 year\"")
-    parser.add_argument("-n", "--number", type=int, nargs=1, help="Specify at most how many videos at most to load per youtuber despite time frame")
+    parser.add_argument("-n", "--number", type=int, nargs=1, help="Specify at most how many videos to load")
     parser.add_argument("-v", "--verbose", action="store_true", default=False, help="Print out extra information")
     parser.add_argument("--clear-knowns", action="store_true", default=False, help="Clear files used to store information about videos and releases")
 
@@ -125,7 +125,6 @@ def main():
     verboseprint = print if args.verbose else lambda *a, **k: None
 
     if args.clear_knowns:
-        #connection = connectToDB()
         conn_wrapped = ConnectionWrapper()
         connectToDB(conn_wrapped)
         cursor = conn_wrapped.connection.cursor()
@@ -133,7 +132,6 @@ def main():
         cursor.execute("DELETE FROM KnownReleases")
         conn_wrapped.connection.commit()
         closeConnection(conn_wrapped)
-        print("Cleared database")
         sys.exit(exit_codes.EXIT_SUCCESS)
 
     assert normal_exec or release_exec , "Uh oh how did this happen? Some how both executions are false?"
@@ -146,7 +144,6 @@ def main():
     else:
         releaseExec(args.file, max_loads)
 
-    #closeConnection()
     #end of main
 
 def releaseExec(files, max_loads: int):
@@ -168,22 +165,18 @@ def releaseExec(files, max_loads: int):
                     print(f"Handle \"{handle}\" does not have extractable release content", file = sys.stderr)
                     continue
 
-                first_id = releases[0]["richItemRenderer"]["content"]["playlistRenderer"]["playlistId"]
-
-                #if the handle has not been added then there is no known stopping point
+                load_count = max_loads
+                new_handle = False
+                verboseprint(f"checking handle {handle}")
                 if not findHandle(handle, db_tables.R_TABLE, conn_wrapped):
-                    if addID(handle, first_id, db_tables.R_TABLE, conn_wrapped) != 0:
-                        closeConnection(conn_wrapped)
-                        print("Terminating program due to malformed data", file = sys.stderr)
-                        sys.exit(exit_codes.EXIT_FAILURE)
-
-                    playlist_path = "https://www.youtube.com" + releases[0]["richItemRenderer"]["content"]["playlistRenderer"]["navigationEndpoint"]["commandMetadata"]["webCommandMetadata"]["url"]
-                    openPathWithBrowser(playlist_path)
-                    continue #go to next url
+                    addHandle(handle, db_tables.R_TABLE, conn_wrapped)
+                    if load_count == constant_infs.LOAD_TO_KNOWN:
+                        load_count = 1
+                    new_handle = True
 
                 releases_loaded = 0
                 for content in releases:
-                    if releases_loaded >= max_loads:
+                    if releases_loaded >= load_count:
                         break
 
                     playlist_id = None
@@ -206,16 +199,14 @@ def releaseExec(files, max_loads: int):
                     #sleep to prevent spamming
                     time.sleep(1)
 
-                #No new releases
                 if releases_loaded == 0:
                     verboseprint(f"No new releases for channel {handle}")
-                elif releases_loaded > 0 and addID(handle, first_id, db_tables.R_TABLE, conn_wrapped) != 0:
-                    closeConnection(conn_wrapped)
-                    print("Terminating program due to malformed data", file = sys.stderr)
-                    sys.exit(exit_codes.EXIT_FAILURE)
+                elif new_handle or releases_loaded > 0:
+                    first_id = releases[0]["richItemRenderer"]["content"]["playlistRenderer"]["playlistId"]
+                    addID(handle, first_id, db_tables.R_TABLE, conn_wrapped) != 0
+
     #end of big for loop
     closeConnection(conn_wrapped)
-
 
 def normalExec(files, time_frame: int, max_loads: int):
     assert files, "Not given any files"
@@ -230,59 +221,47 @@ def normalExec(files, time_frame: int, max_loads: int):
         with open(file_name, encoding = "ascii") as open_file:
             for raw_handle in open_file:
                 handle = raw_handle.rstrip("\n")
-                verboseprint(f"checking handle {handle}")
 
                 videos = obtainElements(constant_yt.YT_VIDEOS, handle)
                 if not videos:
                     print(f"Handle \"{handle}\" does not have extractable video content", file = sys.stderr)
                     continue
 
-                first_id = videos[0]["richItemRenderer"]["content"]["videoRenderer"]["videoId"]
-                offset = 0
+                load_count = max_loads
+                new_handle = False
+                verboseprint(f"checking handle {handle}")
+                if not findHandle(handle, db_tables.V_TABLE, conn_wrapped):
+                    addHandle(handle, db_tables.V_TABLE, conn_wrapped)
+                    if max_loads == constant_infs.NO_LIMIT and time_frame == constant_infs.LOAD_TO_KNOWN:
+                        #if neither limit isn't placed then it isn't known when to stop
+                        load_count = 1
+                    new_handle = True
+
                 videos_loaded = 0
 
-                if not findHandle(handle, db_tables.V_TABLE, conn_wrapped):
-                    #if the handle has not been added then there is no known stopping point
-                    if addID(handle, first_id, db_tables.V_TABLE, conn_wrapped) != 0:
-                        closeConnection(conn_wrapped)
-                        print("Terminating program due to malformed data", file = sys.stderr)
-                        sys.exit(exit_codes.EXIT_FAILURE)
-
-                    time_phrase = (videos[0]["richItemRenderer"]["content"]["videoRenderer"]["publishedTimeText"]["simpleText"]).split(" ")
-                    converted_time = convertToMinutes(time_phrase[0], time_phrase[1])
-
-                    if converted_time < time_frame:
-                        video_path = constant_yt.YT_BASE + first_id
-                        videos_loaded = videos_loaded + 1
-                        openPathWithBrowser(video_path)
-
-                        if time_frame != constant_infs.LOAD_TO_KNOWN:
-                            offset = 1
-                        else:
-                            #go to next URL
-                            continue
-
                 #load other content
-                for content in videos[offset:]:
-                    if videos_loaded >= max_loads:
+                for content in videos:
+                    if videos_loaded >= load_count:
                         break
 
-                    video_id = None
-                    time_phrase = None
-                    converted_time = None
                     try:
                         element = content["richItemRenderer"]["content"]["videoRenderer"]
                         video_id = element["videoId"]
-                        time_phrase = (element["publishedTimeText"]["simpleText"]).split(" ")
-                        converted_time = convertToMinutes(time_phrase[0], time_phrase[1])
                     except KeyError:
-                        #have reached end of first page
-                        #there is a continuation in the JSON but it doesn't show videos
-                        #go to next url
+                        #reached continuation element
                         break
 
                     if findID(handle, video_id, db_tables.V_TABLE, conn_wrapped):
                         break
+
+                    time_phrase = None
+                    converted_time = None
+                    try:
+                        time_phrase = (element["publishedTimeText"]["simpleText"]).split(" ")
+                        converted_time = convertToMinutes(time_phrase[0], time_phrase[1])
+                    except KeyError:
+                        verboseprint("Loading premiere video")
+                        converted_time = 0
 
                     #then check the time as a new video could have an id
                     #not in range
@@ -297,15 +276,14 @@ def normalExec(files, time_frame: int, max_loads: int):
                     time.sleep(1)
 
                 #No new videos
-                if offset == 0 and videos_loaded == 0:
+                if videos_loaded == 0:
                     time_phrase = (videos[0]["richItemRenderer"]["content"]["videoRenderer"]["publishedTimeText"]["simpleText"]).split(" ")
                     verboseprint(f"Youtube channel {handle} has not uploaded in {time_phrase[0]} {time_phrase[1]}")
 
-                #add first id to db
-                elif addID(handle, first_id, db_tables.V_TABLE, conn_wrapped) != 0:
-                    closeConnection(conn_wrapped)
-                    print("Terminating program due to malformed data", file = sys.stderr)
-                    sys.exit(exit_codes.EXIT_FAILURE)
+                if new_handle or videos_loaded > 0:
+                    first_id = videos[0]["richItemRenderer"]["content"]["videoRenderer"]["videoId"]
+                    addID(handle, first_id, db_tables.V_TABLE, conn_wrapped)
+
     #end of big for loop
     closeConnection(conn_wrapped)
 
@@ -512,7 +490,6 @@ def addID(handle:str, id: str, table: str, conn_wrapper: ConnectionWrapper):
             return -1
 
     count_handle = f"SELECT COUNT(id) FROM {table} WHERE handle = ?;"
-    #connection = connectToDB()
     cursor = conn_wrapper.connection.cursor()
     result = (cursor.execute(count_handle, (handle,))).fetchone()[0]
     #add entry if it doesn't exist otherwise update it
@@ -546,13 +523,36 @@ def findID(handle: str, id: str, table: str, conn_wrapper: ConnectionWrapper):
     assert conn_wrapper.status == conn_wrapper.OPEN, "Attempting to used a closed connection to find an ID"
 
     search_query = f"SELECT COUNT(id) FROM {table} WHERE known_id = ? AND handle = ?;"
-    #connection = connectToDB()
     cursor = conn_wrapper.connection.cursor()
     result = (cursor.execute(search_query, (id, handle))).fetchone()[0]
     if result == 0:
         return False
     else:
         return True
+
+def addHandle(handle:str, table: str, conn_wrapper: ConnectionWrapper):
+    assert handle is not None, "Can't add a None handle"
+    assert table in (db_tables.V_TABLE, db_tables.R_TABLE), f"Invalid table given {table}"
+    assert isinstance(conn_wrapper, ConnectionWrapper), "Not using the connection wrapper for adding an ID"
+    assert conn_wrapper.status == conn_wrapper.OPEN, "Attempting to used a closed connection to add an ID"
+
+    #with the usage of parameterized queries sanitization is not necessary
+    #but validation is necessary to prevent garbage data in.
+    #If garbage data is entered then that garbage can't be found with expected data
+    if not validateHandle(handle):
+        print(f"Invalid handle given \"{handle}\".", file = sys.stderr)
+        return -1
+
+    add_query = f"INSERT INTO {table} (handle, known_id) VALUES (?, ?);"
+    cursor = conn_wrapper.connection.cursor()
+    try:
+        initial_id = "00000000000"
+        cursor.execute(add_query, (handle, initial_id))
+    except Exception as e:
+        print(e)
+        sys.exit(exit_codes.EXIT_FAILURE)
+
+    conn_wrapper.connection.commit()
 
 def findHandle(handle: str, table: str, conn_wrapper: ConnectionWrapper):
     assert handle is not None, "Can't find a None handle"
@@ -561,7 +561,6 @@ def findHandle(handle: str, table: str, conn_wrapper: ConnectionWrapper):
     assert conn_wrapper.status == conn_wrapper.OPEN, "Attempting to used a closed connection to find a handle"
 
     search_query = f"SELECT COUNT(id) FROM {table} WHERE handle = ?;"
-    #connection = connectToDB()
     cursor = conn_wrapper.connection.cursor()
     result = (cursor.execute(search_query, (handle,))).fetchone()[0]
     if result == 0:
@@ -575,7 +574,6 @@ def connectToDB(conn_object: ConnectionWrapper):
     if conn_object.status == conn_object.CLOSED:
         conn_object.connection = sqlite3.connect(db_tables.DB_NAME, isolation_level = None)
         conn_object.status = conn_object.OPEN
-
 
     assert conn_object.status == conn_object.OPEN, "Opening a DB connection resulted in a status of closed"
     assert conn_object.connection is not None, "Connection object is opened but remained None"
